@@ -4,7 +4,9 @@ grammar;
 
 pub ConstantExp: Constant = {
     r"[+-]?\d" => Constant::Integer((<>).parse().unwrap()),
-    r"[+-]?\d\.\d" => Constant::Float((<>).parse().unwrap())
+    r"[+-]?\d\.\d" => Constant::Float((<>).parse().unwrap()),
+    r"IGAZ|igaz" => Constant::Boolean(true),
+    r"HAMIS|hamis" => Constant::Boolean(false),
 };
 
 pub Input: Constant = {

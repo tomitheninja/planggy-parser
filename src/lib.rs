@@ -72,5 +72,34 @@ mod parser {
                 assert_eq!(parser.parse("-1.0"), Ok(ast::Constant::Float(-1.0)));
             }
         }
+
+        #[cfg(test)]
+        mod logical {
+            use super::*;
+
+            #[test]
+            fn lowercase_true() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("igaz"), Ok(ast::Constant::Boolean(true)));
+            }
+
+            #[test]
+            fn uppercase_true() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("IGAZ"), Ok(ast::Constant::Boolean(true)));
+            }
+
+            #[test]
+            fn lowercase_false() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("hamis"), Ok(ast::Constant::Boolean(false)));
+            }
+
+            #[test]
+            fn uppercase_false() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("HAMIS"), Ok(ast::Constant::Boolean(false)));
+            }
+        }
     }
 }
