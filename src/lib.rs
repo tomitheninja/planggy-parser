@@ -101,5 +101,30 @@ mod parser {
                 assert_eq!(parser.parse("HAMIS"), Ok(ast::Constant::Boolean(false)));
             }
         }
+
+        #[cfg(test)]
+        mod character {
+            use ast::Constant;
+
+            use super::*;
+
+            #[test]
+            fn normal() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("'a'"), Ok(Constant::Character('a')))
+            }
+
+            #[test]
+            fn invalid_symbol() {
+                let parser = Parser::new();
+                assert!(parser.parse("'''").is_err());
+            }
+
+            #[test]
+            fn char_symbol() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("'\\''"), Ok(Constant::Character('\'')))
+            }
+        }
     }
 }

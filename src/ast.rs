@@ -3,4 +3,5 @@ pub enum Constant {
     Integer(i32),
     Float(f64),
     Boolean(bool),
+    Character(char),
 }

@@ -3,6 +3,8 @@ use crate::ast::*;
 grammar;
 
 pub ConstantExp: Constant = {
+    r"'[^']'" => Constant::Character((<>).chars().nth(1).unwrap()),
+    r"'\\''" => Constant::Character('\''),
     r"[+-]?\d" => Constant::Integer((<>).parse().unwrap()),
     r"[+-]?\d\.\d" => Constant::Float((<>).parse().unwrap()),
     r"IGAZ|igaz" => Constant::Boolean(true),
