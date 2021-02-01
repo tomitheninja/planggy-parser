@@ -1,0 +1,6 @@
+grammar;
+
+pub Input: String = {
+    <r"HELLO"> => "WORLD".to_string()
+};
+

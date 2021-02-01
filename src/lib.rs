@@ -1,7 +1,16 @@
+#[macro_use]
+extern crate lalrpop_util;
+
+lalrpop_mod!(pub planggy);
+
+pub use planggy::InputParser as Parser;
+
 #[cfg(test)]
-mod tests {
+mod parser {
+    use super::Parser;
+
     #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    fn hello_world() {
+        assert_eq!(Parser::new().parse("HELLO"), Ok("WORLD".to_string()));
     }
 }
