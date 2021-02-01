@@ -1,16 +1,76 @@
 #[macro_use]
 extern crate lalrpop_util;
 
+pub mod ast;
+
 lalrpop_mod!(pub planggy);
 
 pub use planggy::InputParser as Parser;
 
 #[cfg(test)]
 mod parser {
-    use super::Parser;
+    use super::*;
 
-    #[test]
-    fn hello_world() {
-        assert_eq!(Parser::new().parse("HELLO"), Ok("WORLD".to_string()));
+    #[cfg(test)]
+    mod constant_expressions {
+        use super::{planggy::ConstantExpParser as Parser, *};
+
+        #[cfg(test)]
+        mod integer {
+            use super::*;
+
+            #[test]
+            fn one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("1"), Ok(ast::Constant::Integer(1)));
+            }
+
+            #[test]
+            fn two() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("2"), Ok(ast::Constant::Integer(2)));
+            }
+
+            #[test]
+            fn signed_one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("+1"), Ok(ast::Constant::Integer(1)));
+            }
+
+            #[test]
+            fn signed_negative_one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("-1"), Ok(ast::Constant::Integer(-1)));
+            }
+        }
+
+        #[cfg(test)]
+        mod float {
+            use super::*;
+
+            #[test]
+            fn one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("1.0"), Ok(ast::Constant::Float(1.0)));
+            }
+
+            #[test]
+            fn two() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("2.0"), Ok(ast::Constant::Float(2.0)));
+            }
+
+            #[test]
+            fn signed_one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("+1.0"), Ok(ast::Constant::Float(1.0)));
+            }
+
+            #[test]
+            fn signed_negative_one() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("-1.0"), Ok(ast::Constant::Float(-1.0)));
+            }
+        }
     }
 }

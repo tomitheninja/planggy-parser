@@ -1,6 +1,13 @@
+use crate::ast::*;
+
 grammar;
 
-pub Input: String = {
-    <r"HELLO"> => "WORLD".to_string()
+pub ConstantExp: Constant = {
+    r"[+-]?\d" => Constant::Integer((<>).parse().unwrap()),
+    r"[+-]?\d\.\d" => Constant::Float((<>).parse().unwrap())
+};
+
+pub Input: Constant = {
+    ConstantExp
 };
 
