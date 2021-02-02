@@ -1,16 +1,4 @@
-use derive_more::{From, TryInto};
-
-type Int = i32;
-type Float = f64;
-
-#[derive(Debug, Clone, PartialEq, PartialOrd, From, TryInto)]
-pub enum Constant {
-    Integer(Int),
-    Float(Float),
-    Boolean(bool),
-    Character(char),
-    String(String),
-}
+use super::Expression;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Operation {
@@ -51,60 +39,4 @@ pub enum Operation {
     Le(Box<Expression>, Box<Expression>),     // <exp:any> <= <exp:any>
     Gt(Box<Expression>, Box<Expression>),     // <exp:any> > <exp:any>
     Ge(Box<Expression>, Box<Expression>),     // <exp:any> >= <exp:any>
-}
-
-#[derive(Debug, Clone, PartialEq, PartialOrd, From, TryInto)]
-pub enum Expression {
-    Const(Constant),
-    Op(Operation),
-    // TODO:
-    // Variable(Variable)
-}
-
-impl Expression {
-    pub fn boxed(self) -> Box<Self> {
-        Box::new(self)
-    }
-}
-
-macro_rules! impl_from {
-    ($name:ty) => {
-        impl From<$name> for Expression {
-            fn from(x: $name) -> Self {
-                Expression::Const(x.into())
-            }
-        }
-
-        impl From<$name> for Box<Expression> {
-            fn from(x: $name) -> Self {
-                Box::new(x.into())
-            }
-        }
-    };
-}
-
-impl_from!(Int);
-impl_from!(Float);
-impl_from!(bool);
-impl_from!(char);
-impl_from!(String);
-
-#[cfg(test)]
-mod traits {
-    use super::*;
-
-    #[test]
-    fn int_into_constexpr() {
-        assert_eq!(Constant::Integer(2), 2.into());
-    }
-
-    #[test]
-    fn int_into_expr() {
-        assert_eq!(Expression::Const(Constant::Integer(2)), 2.into());
-    }
-
-    #[test]
-    fn int_into_boxed_expr() {
-        assert_eq!(Box::new(Expression::Const(Constant::Integer(2))), 2.into());
-    }
 }

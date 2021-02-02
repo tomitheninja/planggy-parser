@@ -6,7 +6,7 @@ use crate::ast::{
 
 grammar;
 
-Const: C = {
+pub Const: C = {
     r"'[^'\\]'" => C::Character(<>.chars().nth(1).unwrap()),
     r"'\\['\\rnt0]'" => C::Character({
         match <>.chars().nth(2) {
