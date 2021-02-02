@@ -42,6 +42,7 @@ AtomicExpr: E = {
 // A wrapper converts any expression into an atom
 WrappedExpr: E = {
     "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
+    "|" <Expr> "|" => E::Op(O::Abs(Box::new(<>))),
 };
 
 /// An expression in unary
@@ -55,6 +56,36 @@ UnaryExpr: E = {
     r"(NEM|nem)\s" <AtomicOrUnary> => E::Op(O::Not(Box::new(<>))),
     r"(NEM|nem)" <WrappedExpr> => E::Op(O::Not(Box::new(<>))),
     "-" <AtomicOrUnary> => E::Op(O::Neg(Box::new(<>))),
+    r"(RND|rnd)\s" <AtomicOrUnary> => E::Op(O::Rnd(Box::new(<>))),
+    r"(RND|rnd)" <WrappedExpr> => E::Op(O::Rnd(Box::new(<>))),
+    r"(SIN|sin)\s" <AtomicOrUnary> => E::Op(O::Sin(Box::new(<>))),
+    r"(SIN|sin)" <WrappedExpr> => E::Op(O::Sin(Box::new(<>))),
+    r"(COS|cos)\s" <AtomicOrUnary> => E::Op(O::Cos(Box::new(<>))),
+    r"(COS|cos)" <WrappedExpr> => E::Op(O::Cos(Box::new(<>))),
+    r"(TAN|tan)\s" <AtomicOrUnary> => E::Op(O::Tan(Box::new(<>))),
+    r"(TAN|tan)" <WrappedExpr> => E::Op(O::Tan(Box::new(<>))),
+    r"(ARCSIN|arcsin)\s" <AtomicOrUnary> => E::Op(O::Arcsin(Box::new(<>))),
+    r"(ARCSIN|arcsin)" <WrappedExpr> => E::Op(O::Arcsin(Box::new(<>))),
+    r"(ARCCOS|arccos)\s" <AtomicOrUnary> => E::Op(O::Arccos(Box::new(<>))),
+    r"(ARCCOS|arccos)" <WrappedExpr> => E::Op(O::Arccos(Box::new(<>))),
+    r"(LOG|log)\s" <AtomicOrUnary> => E::Op(O::Log(Box::new(<>))),
+    r"(LOG|log)" <WrappedExpr> => E::Op(O::Log(Box::new(<>))),
+    r"(EXP|exp)\s" <AtomicOrUnary> => E::Op(O::Exp(Box::new(<>))),
+    r"(EXP|exp)" <WrappedExpr> => E::Op(O::Exp(Box::new(<>))),
+    r"(VALOS|valos)\s" <AtomicOrUnary> => E::Op(O::ToFloat(Box::new(<>))),
+    r"(VALOS|valos)" <WrappedExpr> => E::Op(O::ToFloat(Box::new(<>))),
+    r"(EGESZ|egesz)\s" <AtomicOrUnary> => E::Op(O::Floor(Box::new(<>))),
+    r"(EGESZ|egesz)" <WrappedExpr> => E::Op(O::Floor(Box::new(<>))),
+    r"(KEREK|kerek)\s" <AtomicOrUnary> => E::Op(O::Round(Box::new(<>))),
+    r"(KEREK|kerek)" <WrappedExpr> => E::Op(O::Round(Box::new(<>))),
+    r"(NAGY|nagy)\s" <AtomicOrUnary> => E::Op(O::ToUpper(Box::new(<>))),
+    r"(NAGY|nagy)" <WrappedExpr> => E::Op(O::ToUpper(Box::new(<>))),
+    r"(KIS|kis)\s" <AtomicOrUnary> => E::Op(O::ToLower(Box::new(<>))),
+    r"(KIS|kis)" <WrappedExpr> => E::Op(O::ToLower(Box::new(<>))),
+    r"(BETU|betu)\s" <AtomicOrUnary> => E::Op(O::IsWordChar(Box::new(<>))),
+    r"(BETU|betu)" <WrappedExpr> => E::Op(O::IsWordChar(Box::new(<>))),
+    r"(SZAM|szam)\s" <AtomicOrUnary> => E::Op(O::IsDigit(Box::new(<>))),
+    r"(SZAM|szam)" <WrappedExpr> => E::Op(O::IsDigit(Box::new(<>))),
 };
 
 // ######## BINARY OPERATIONS ########
@@ -69,23 +100,45 @@ UnaryExpr: E = {
 Tier0 = { AtomicOrUnary };
 
 Tier1: E = {
-    // pushes itself to the right, as most as it is possible
-    // and then uses the stack to parse from left-to-right.
-    <l:Tier1> "*" <r:Tier0> => E::Op(O::Mul(Box::new(l), Box::new(r))),
-    // If possible, converts the lower tier left side into a same tier expression.
+    <l:Tier1> "^" <r:Tier0> => E::Op(O::Pow(Box::new(l), Box::new(r))),
+    <l:Tier1> "@" <r:Tier0> => E::Op(O::Search(Box::new(l), Box::new(r))),
     Tier0,
 };
 
 Tier2: E = {
-    // pushes itself to the right, as most as it is possible
-    // and then uses the stack to parse from left-to-right.
-    <l:Tier2> "+" <r:Tier1> => E::Op(O::Add(Box::new(l), Box::new(r))),
-    // If possible, converts the lower tier left side into a same tier expression.
+    <l:Tier2> "*" <r:Tier1> => E::Op(O::Mul(Box::new(l), Box::new(r))),
+    <l:Tier2> "/" <r:Tier1> => E::Op(O::Div(Box::new(l), Box::new(r))),
+    <l:Tier2> r"DIV|div" <r:Tier1> => E::Op(O::DivInt(Box::new(l), Box::new(r))),
+    <l:Tier2> r"MOD|mod" <r:Tier1> => E::Op(O::Mod(Box::new(l), Box::new(r))),
     Tier1,
 };
 
+Tier3: E = {
+    <l:Tier3> "+" <r:Tier2> => E::Op(O::Add(Box::new(l), Box::new(r))),
+    <l:Tier3> "-" <r:Tier2> => E::Op(O::Sub(Box::new(l), Box::new(r))),
+    Tier2,
+};
+
+Tier4: E = {
+    // FIXME
+    <l:Tier4> " =" <r:Tier3> => E::Op(O::Eq(Box::new(l), Box::new(r))),
+    <l:Tier4> "/=" <r:Tier3> => E::Op(O::Ne(Box::new(l), Box::new(r))),
+    <l:Tier4> "< " <r:Tier3> => E::Op(O::Lt(Box::new(l), Box::new(r))),
+    <l:Tier4> "<=" <r:Tier3> => E::Op(O::Le(Box::new(l), Box::new(r))),
+    <l:Tier4> "> " <r:Tier3> => E::Op(O::Gt(Box::new(l), Box::new(r))),
+    <l:Tier4> ">=" <r:Tier3> => E::Op(O::Ge(Box::new(l), Box::new(r))),
+    Tier3,
+};
+
+Tier5: E = {
+    // FIXME
+    <l:Tier5> r"[EÉ]S|[eé]s" <r:Tier4> => E::Op(O::Eq(Box::new(l), Box::new(r))),
+    <l:Tier5> r"VAGY|vagy" <r:Tier4> => E::Op(O::Ne(Box::new(l), Box::new(r))),
+    Tier4,
+};
+
 // The weakest operation will be on the bottom of the stack.
-pub Expr: E = Tier2;
+pub Expr: E = Tier5;
 
 pub Input: E = {
     Expr
