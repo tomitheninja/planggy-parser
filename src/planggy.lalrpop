@@ -43,14 +43,17 @@ WrappedExpr: E = {
     "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
 }
 
+AtomicOrUnary: E = { AtomicExpr, UnaryExpr };
+
 /// An expression in unary
 /// if it consists of exactly two parts:
 /// an operation as prefix and an atomic expression
 UnaryExpr: E = {
     // The recommended format is to leave a whitespace after the operation,
     // but the whitespace can be left, if the expression is wrapped.
-    r"(NEM|nem)\s" <AtomicExpr> => E::Op(O::Not(Box::new(<>))),
+    r"(NEM|nem)\s" <AtomicOrUnary> => E::Op(O::Not(Box::new(<>))),
     r"(NEM|nem)" <WrappedExpr> => E::Op(O::Not(Box::new(<>))),
+    "-" <AtomicOrUnary> => E::Op(O::Neg(Box::new(<>))),
 }
 
 pub Expr: E = {

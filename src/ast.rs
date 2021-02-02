@@ -11,6 +11,7 @@ pub enum Constant {
 pub enum Operation {
     Parentheses(Box<Expression>),
     Not(Box<Expression>),
+    Neg(Box<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

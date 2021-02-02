@@ -262,6 +262,23 @@ mod parser {
                 }
 
                 #[test]
+                fn chain_rule_support() {
+                    let parser = Parser::new();
+                    assert!(parser.parse("NEM NEM NEM NEM IGAZ").is_ok())
+                }
+
+                #[test]
+                fn chain_rule() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("- NEM IGAZ"),
+                        Ok(E::Op(O::Neg(Box::new(E::Op(O::Not(Box::new(E::Const(
+                            C::Boolean(true)
+                        ))))))))
+                    )
+                }
+
+                #[test]
                 fn missing_whitespace() {
                     let parser = Parser::new();
                     assert!(parser.parse("NEMIGAZ").is_err());
