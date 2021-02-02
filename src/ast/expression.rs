@@ -31,7 +31,7 @@ macro_rules! impl_from {
     };
 }
 
-use super::constant::{Float, Int};
+use super::value::{Float, Int};
 
 impl_from!(Int);
 impl_from!(Float);

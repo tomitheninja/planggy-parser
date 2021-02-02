@@ -4,7 +4,7 @@ pub type Int = i32;
 pub type Float = f64;
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, From, TryInto)]
-pub enum Constant {
+pub enum Value {
     Integer(Int),
     Float(Float),
     Boolean(bool),
@@ -14,5 +14,5 @@ pub enum Constant {
 
 #[test]
 fn int_into_constexpr() {
-    assert_eq!(Constant::Integer(2), 2.into());
+    assert_eq!(Value::Integer(2), 2.into());
 }
