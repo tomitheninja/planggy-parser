@@ -4,4 +4,5 @@ pub enum Constant {
     Float(f64),
     Boolean(bool),
     Character(char),
+    String(String),
 }

@@ -3,10 +3,22 @@ use crate::ast::*;
 grammar;
 
 pub ConstantExp: Constant = {
-    r"'[^']'" => Constant::Character((<>).chars().nth(1).unwrap()),
-    r"'\\''" => Constant::Character('\''),
-    r"[+-]?\d" => Constant::Integer((<>).parse().unwrap()),
-    r"[+-]?\d\.\d" => Constant::Float((<>).parse().unwrap()),
+    r"'[^'\\]'" => Constant::Character(<>.chars().nth(1).unwrap()),
+    r"'\\.'" => Constant::Character({
+        match <>.chars().nth(2) {
+            Some('\'') => '\'',
+            Some('\\') => '\\',
+            Some('r')  => '\r',
+            Some('n')  => '\n',
+            Some('t')  => '\t',
+            Some('0')  => '\0',
+            _ => unimplemented!("Unknown escaped character!"),
+        }
+    }),
+    r#""""# => Constant::String("".to_string()),
+    r#""([^"]|([\\]["]))*([^\\]|\\\\)""# => Constant::String((<>)[1..<>.len()-1].to_string()),
+    r"[+-]?\d" => Constant::Integer(<>.parse().unwrap()),
+    r"[+-]?\d\.\d" => Constant::Float(<>.parse().unwrap()),
     r"IGAZ|igaz" => Constant::Boolean(true),
     r"HAMIS|hamis" => Constant::Boolean(false),
 };
@@ -14,4 +26,3 @@ pub ConstantExp: Constant = {
 pub Input: Constant = {
     ConstantExp
 };
-

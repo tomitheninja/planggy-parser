@@ -115,15 +115,102 @@ mod parser {
             }
 
             #[test]
-            fn invalid_symbol() {
+            fn invalid_single_quote() {
                 let parser = Parser::new();
                 assert!(parser.parse("'''").is_err());
             }
 
             #[test]
-            fn char_symbol() {
+            fn empty() {
+                let parser = Parser::new();
+                assert!(parser.parse("''").is_err());
+            }
+
+            #[test]
+            fn single_quote() {
                 let parser = Parser::new();
                 assert_eq!(parser.parse("'\\''"), Ok(Constant::Character('\'')))
+            }
+
+            #[test]
+            fn unescaped_backslash() {
+                let parser = Parser::new();
+                assert!(parser.parse("'\\'").is_err())
+            }
+
+            #[test]
+            fn escaped_backslash() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("'\\\\'"), Ok(Constant::Character('\\')))
+            }
+        }
+
+        #[cfg(test)]
+        mod string {
+            use super::*;
+
+            #[test]
+            fn empty() {
+                let parser = Parser::new();
+                assert_eq!(
+                    parser.parse("\"foo\""),
+                    Ok(ast::Constant::String("foo".to_string()))
+                )
+            }
+
+            #[test]
+            fn ascii() {
+                let parser = Parser::new();
+                assert_eq!(
+                    parser.parse("\"loremipsum123\""),
+                    Ok(ast::Constant::String("loremipsum123".to_string()))
+                )
+            }
+
+            #[test]
+            fn words() {
+                let parser = Parser::new();
+                assert_eq!(
+                    parser.parse("\"lorem ipsum\""),
+                    Ok(ast::Constant::String("lorem ipsum".to_string()))
+                )
+            }
+
+            #[test]
+            fn emojis() {
+                let parser = Parser::new();
+                assert_eq!(
+                    parser.parse("\"♥\""),
+                    Ok(ast::Constant::String("♥".to_string()))
+                )
+            }
+
+            #[test]
+            fn quotes() {
+                let parser = Parser::new();
+                assert_eq!(
+                    parser.parse("\"foo\\\"bar\""),
+                    Ok(ast::Constant::String("foo\\\"bar".to_string()))
+                )
+            }
+
+            #[test]
+            fn backslash_inside() {
+                let parser = Parser::new();
+                assert!(parser.parse("\"fo\\o\"").is_ok());
+            }
+
+            #[test]
+            fn backslash_as_last() {
+                let parser = Parser::new();
+                assert!(parser.parse("\"fo\\\"").is_err());
+            }
+
+            #[test]
+            fn escaped_backslash_as_last() {
+                let parser = Parser::new();
+                assert!(parser.parse("\"fo\\\\\"").is_ok());
+                assert!(parser.parse("\"\\\\\"").is_ok());
             }
         }
     }
