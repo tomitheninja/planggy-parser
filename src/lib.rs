@@ -303,11 +303,24 @@ mod parser {
             }
 
             #[cfg(test)]
-            mod tier1 {
+            mod binary {
                 use super::*;
 
                 #[test]
-                fn mul_const() {
+                fn add_multiple() {
+                    let parser = Parser::new();
+                    let two = E::Const(C::Integer(2));
+                    let three = E::Const(C::Integer(3));
+                    let four = E::Const(C::Integer(4));
+                    let five = E::Const(C::Integer(5));
+                    let add23 = E::Op(O::Add(Box::new(two), Box::new(three)));
+                    let add234 = E::Op(O::Add(Box::new(add23), Box::new(four)));
+                    let add2345 = E::Op(O::Add(Box::new(add234), Box::new(five)));
+                    assert_eq!(parser.parse("2 + 3 + 4 + 5"), Ok(add2345));
+                }
+
+                #[test]
+                fn mul_constants() {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("2 * 3"),
@@ -319,7 +332,7 @@ mod parser {
                 }
 
                 #[test]
-                fn add_const() {
+                fn add_constants() {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("2 + 3"),

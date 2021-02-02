@@ -33,12 +33,13 @@ Const: C = {
 };
 
 /// An expression in atomic
-/// if it consists of only part
+/// if it consists of only one part
 AtomicExpr: E = {
     Const => E::Const(<>),
     WrappedExpr => <>,
 };
 
+// A wrapper converts any expression into an atom
 WrappedExpr: E = {
     "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
 };
@@ -60,26 +61,31 @@ UnaryExpr: E = {
 //
 // The order of execution is determinated by the operations
 // Some operations are "stronger" than others.
+// The parser will go from the lowest tier to the highest tier.
+// An will _fall back_ to the strongest tier.
 
-// In the context of binnary operations,
-// unary operations are considered atomic.
-Tier0Expr = { AtomicOrUnary };
+// In the context of binary operations,
+// unary operations can be considered atomic.
+Tier0 = { AtomicOrUnary };
 
-Tier1Expr: E = {
-    <l:Tier0Expr> "*" <r:Tier0Expr> => E::Op(O::Mul(Box::new(l), Box::new(r)))
+Tier1: E = {
+    // pushes itself to the right, as most as it is possible
+    // and then uses the stack to parse from left-to-right.
+    <l:Tier1> "*" <r:Tier0> => E::Op(O::Mul(Box::new(l), Box::new(r))),
+    // If possible, converts the lower tier left side into a same tier expression.
+    Tier0,
 };
 
-TierMax1Expr = { Tier0Expr, Tier1Expr };
-
-Tier2Expr: E = {
-       <l:TierMax1Expr> "+" <r:TierMax1Expr> => E::Op(O::Add(Box::new(l), Box::new(r))) 
-}
-
-pub Expr: E = {
-    Tier0Expr,
-    Tier1Expr,
-    Tier2Expr,
+Tier2: E = {
+    // pushes itself to the right, as most as it is possible
+    // and then uses the stack to parse from left-to-right.
+    <l:Tier2> "+" <r:Tier1> => E::Op(O::Add(Box::new(l), Box::new(r))),
+    // If possible, converts the lower tier left side into a same tier expression.
+    Tier1,
 };
+
+// The weakest operation will be on the bottom of the stack.
+pub Expr: E = Tier2;
 
 pub Input: E = {
     Expr
