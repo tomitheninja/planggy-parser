@@ -12,8 +12,9 @@ mod parser {
     use super::*;
 
     #[cfg(test)]
-    mod constant_expressions {
-        use super::{planggy::ConstantExpParser as Parser, *};
+    mod expressions {
+        use super::{planggy::ExprParser as Parser, *};
+        use ast::{Constant as C, Expression as E};
 
         #[cfg(test)]
         mod integer {
@@ -22,25 +23,25 @@ mod parser {
             #[test]
             fn one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("1"), Ok(ast::Constant::Integer(1)));
+                assert_eq!(parser.parse("1"), Ok(E::Const(C::Integer(1))));
             }
 
             #[test]
             fn two() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("2"), Ok(ast::Constant::Integer(2)));
+                assert_eq!(parser.parse("2"), Ok(E::Const(C::Integer(2))));
             }
 
             #[test]
             fn signed_one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("+1"), Ok(ast::Constant::Integer(1)));
+                assert_eq!(parser.parse("+1"), Ok(E::Const(C::Integer(1))));
             }
 
             #[test]
             fn signed_negative_one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("-1"), Ok(ast::Constant::Integer(-1)));
+                assert_eq!(parser.parse("-1"), Ok(E::Const(C::Integer(-1))));
             }
         }
 
@@ -51,25 +52,25 @@ mod parser {
             #[test]
             fn one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("1.0"), Ok(ast::Constant::Float(1.0)));
+                assert_eq!(parser.parse("1.0"), Ok(E::Const(C::Float(1.0))));
             }
 
             #[test]
             fn two() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("2.0"), Ok(ast::Constant::Float(2.0)));
+                assert_eq!(parser.parse("2.0"), Ok(E::Const(C::Float(2.0))));
             }
 
             #[test]
             fn signed_one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("+1.0"), Ok(ast::Constant::Float(1.0)));
+                assert_eq!(parser.parse("+1.0"), Ok(E::Const(C::Float(1.0))));
             }
 
             #[test]
             fn signed_negative_one() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("-1.0"), Ok(ast::Constant::Float(-1.0)));
+                assert_eq!(parser.parse("-1.0"), Ok(E::Const(C::Float(-1.0))));
             }
         }
 
@@ -80,38 +81,36 @@ mod parser {
             #[test]
             fn lowercase_true() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("igaz"), Ok(ast::Constant::Boolean(true)));
+                assert_eq!(parser.parse("igaz"), Ok(E::Const(C::Boolean(true))));
             }
 
             #[test]
             fn uppercase_true() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("IGAZ"), Ok(ast::Constant::Boolean(true)));
+                assert_eq!(parser.parse("IGAZ"), Ok(E::Const(C::Boolean(true))));
             }
 
             #[test]
             fn lowercase_false() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("hamis"), Ok(ast::Constant::Boolean(false)));
+                assert_eq!(parser.parse("hamis"), Ok(E::Const(C::Boolean(false))));
             }
 
             #[test]
             fn uppercase_false() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("HAMIS"), Ok(ast::Constant::Boolean(false)));
+                assert_eq!(parser.parse("HAMIS"), Ok(E::Const(C::Boolean(false))));
             }
         }
 
         #[cfg(test)]
         mod character {
-            use ast::Constant;
-
             use super::*;
 
             #[test]
             fn normal() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("'a'"), Ok(Constant::Character('a')))
+                assert_eq!(parser.parse("'a'"), Ok(E::Const(C::Character('a'))))
             }
 
             #[test]
@@ -129,7 +128,7 @@ mod parser {
             #[test]
             fn single_quote() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("'\\''"), Ok(Constant::Character('\'')))
+                assert_eq!(parser.parse("'\\''"), Ok(E::Const(C::Character('\''))))
             }
 
             #[test]
@@ -141,7 +140,7 @@ mod parser {
             #[test]
             fn escaped_backslash() {
                 let parser = Parser::new();
-                assert_eq!(parser.parse("'\\\\'"), Ok(Constant::Character('\\')))
+                assert_eq!(parser.parse("'\\\\'"), Ok(E::Const(C::Character('\\'))))
             }
         }
 
@@ -154,7 +153,7 @@ mod parser {
                 let parser = Parser::new();
                 assert_eq!(
                     parser.parse("\"foo\""),
-                    Ok(ast::Constant::String("foo".to_string()))
+                    Ok(E::Const(C::String("foo".to_string())))
                 )
             }
 
@@ -163,7 +162,7 @@ mod parser {
                 let parser = Parser::new();
                 assert_eq!(
                     parser.parse("\"loremipsum123\""),
-                    Ok(ast::Constant::String("loremipsum123".to_string()))
+                    Ok(E::Const(C::String("loremipsum123".to_string())))
                 )
             }
 
@@ -172,7 +171,7 @@ mod parser {
                 let parser = Parser::new();
                 assert_eq!(
                     parser.parse("\"lorem ipsum\""),
-                    Ok(ast::Constant::String("lorem ipsum".to_string()))
+                    Ok(E::Const(C::String("lorem ipsum".to_string())))
                 )
             }
 
@@ -181,7 +180,7 @@ mod parser {
                 let parser = Parser::new();
                 assert_eq!(
                     parser.parse("\"♥\""),
-                    Ok(ast::Constant::String("♥".to_string()))
+                    Ok(E::Const(C::String("♥".to_string())))
                 )
             }
 
@@ -190,7 +189,7 @@ mod parser {
                 let parser = Parser::new();
                 assert_eq!(
                     parser.parse("\"foo\\\"bar\""),
-                    Ok(ast::Constant::String("foo\\\"bar".to_string()))
+                    Ok(E::Const(C::String("foo\\\"bar".to_string())))
                 )
             }
 

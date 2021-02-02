@@ -6,3 +6,8 @@ pub enum Constant {
     Character(char),
     String(String),
 }
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum Expression {
+    Const(Constant),
+}

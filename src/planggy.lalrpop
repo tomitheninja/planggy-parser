@@ -1,10 +1,13 @@
-use crate::ast::*;
+use crate::ast::{
+    Constant as C,
+    Expression as E,
+};
 
 grammar;
 
-pub ConstantExp: Constant = {
-    r"'[^'\\]'" => Constant::Character(<>.chars().nth(1).unwrap()),
-    r"'\\.'" => Constant::Character({
+Const: C = {
+    r"'[^'\\]'" => C::Character(<>.chars().nth(1).unwrap()),
+    r"'\\.'" => C::Character({
         match <>.chars().nth(2) {
             Some('\'') => '\'',
             Some('\\') => '\\',
@@ -15,14 +18,25 @@ pub ConstantExp: Constant = {
             _ => unimplemented!("Unknown escaped character!"),
         }
     }),
-    r#""""# => Constant::String("".to_string()),
-    r#""([^"]|([\\]["]))*([^\\]|\\\\)""# => Constant::String((<>)[1..<>.len()-1].to_string()),
-    r"[+-]?\d" => Constant::Integer(<>.parse().unwrap()),
-    r"[+-]?\d\.\d" => Constant::Float(<>.parse().unwrap()),
-    r"IGAZ|igaz" => Constant::Boolean(true),
-    r"HAMIS|hamis" => Constant::Boolean(false),
+    r#""""# => C::String("".to_string()),
+    // wrapped in double-quotes
+    // any char except double-quotes,
+    // or escaped double-quote, repeating.
+    // the last character of the string
+    // must not be a backslash
+    r#""([^"]|([\\]["]))*([^\\]|\\\\)""# => C::String((<>)[1..<>.len()-1].to_string()),
+    r"[+-]?\d" => C::Integer(<>.parse().unwrap()),
+    r"[+-]?\d\.\d" => C::Float(<>.parse().unwrap()),
+    r"IGAZ|igaz" => C::Boolean(true),
+    r"HAMIS|hamis" => C::Boolean(false),
 };
 
-pub Input: Constant = {
-    ConstantExp
+SimpleExpr: E = {
+    Const => E::Const(<>),
+}
+
+pub Expr: E = { SimpleExpr };
+
+pub Input: E = {
+    Expr
 };
