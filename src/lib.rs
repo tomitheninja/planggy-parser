@@ -230,10 +230,7 @@ mod parser {
                 #[test]
                 fn once() {
                     let parser = Parser::new();
-                    assert_eq!(
-                        parser.parse("(123)"),
-                        Ok(E::Op(O::Parentheses(Box::new(E::Const(C::Integer(123))))))
-                    );
+                    assert_eq!(parser.parse("(123)"), Ok(E::Op(O::Parentheses(123.into()))));
                 }
 
                 #[test]
@@ -241,9 +238,9 @@ mod parser {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("((456))"),
-                        Ok(E::Op(O::Parentheses(Box::new(E::Op(O::Parentheses(
-                            Box::new(E::Const(C::Integer(456)))
-                        ))))))
+                        Ok(E::Op(O::Parentheses(
+                            E::Op(O::Parentheses(456.into())).boxed()
+                        )))
                     );
                 }
             }
@@ -255,10 +252,7 @@ mod parser {
                 #[test]
                 fn normal_whitespace() {
                     let parser = Parser::new();
-                    assert_eq!(
-                        parser.parse("NEM IGAZ"),
-                        Ok(E::Op(O::Not(Box::new(E::Const(C::Boolean(true))))))
-                    )
+                    assert_eq!(parser.parse("NEM IGAZ"), Ok(E::Op(O::Not(true.into()))))
                 }
 
                 #[test]
@@ -272,9 +266,7 @@ mod parser {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("- NEM IGAZ"),
-                        Ok(E::Op(O::Neg(Box::new(E::Op(O::Not(Box::new(E::Const(
-                            C::Boolean(true)
-                        ))))))))
+                        Ok(E::Op(O::Neg(E::Op(O::Not(true.into())).boxed())))
                     )
                 }
 
@@ -295,9 +287,7 @@ mod parser {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("NEM(IGAZ)"),
-                        Ok(E::Op(O::Not(Box::new(E::Op(O::Parentheses(Box::new(
-                            E::Const(C::Boolean(true))
-                        )))))))
+                        Ok(E::Op(O::Not(E::Op(O::Parentheses(true.into())).boxed())))
                     );
                 }
             }
@@ -309,38 +299,22 @@ mod parser {
                 #[test]
                 fn add_multiple() {
                     let parser = Parser::new();
-                    let two = E::Const(C::Integer(2));
-                    let three = E::Const(C::Integer(3));
-                    let four = E::Const(C::Integer(4));
-                    let five = E::Const(C::Integer(5));
-                    let add23 = E::Op(O::Add(Box::new(two), Box::new(three)));
-                    let add234 = E::Op(O::Add(Box::new(add23), Box::new(four)));
-                    let add2345 = E::Op(O::Add(Box::new(add234), Box::new(five)));
+                    let add23 = E::Op(O::Add(2.into(), 3.into()));
+                    let add234 = E::Op(O::Add(add23.into(), 4.into()));
+                    let add2345 = E::Op(O::Add(add234.into(), 5.into()));
                     assert_eq!(parser.parse("2 + 3 + 4 + 5"), Ok(add2345));
                 }
 
                 #[test]
                 fn mul_constants() {
                     let parser = Parser::new();
-                    assert_eq!(
-                        parser.parse("2 * 3"),
-                        Ok(E::Op(O::Mul(
-                            Box::new(E::Const(C::Integer(2))),
-                            Box::new(E::Const(C::Integer(3)))
-                        )))
-                    );
+                    assert_eq!(parser.parse("2 * 3"), Ok(E::Op(O::Mul(2.into(), 3.into()))));
                 }
 
                 #[test]
                 fn add_constants() {
                     let parser = Parser::new();
-                    assert_eq!(
-                        parser.parse("2 + 3"),
-                        Ok(E::Op(O::Add(
-                            Box::new(E::Const(C::Integer(2))),
-                            Box::new(E::Const(C::Integer(3)))
-                        )))
-                    );
+                    assert_eq!(parser.parse("2 + 3"), Ok(E::Op(O::Add(2.into(), 3.into()))));
                 }
 
                 #[test]
@@ -349,11 +323,8 @@ mod parser {
                     assert_eq!(
                         parser.parse("2 + 3 * 4"),
                         Ok(E::Op(O::Add(
-                            Box::new(E::Const(C::Integer(2))),
-                            Box::new(E::Op(O::Mul(
-                                Box::new(E::Const(C::Integer(3))),
-                                Box::new(E::Const(C::Integer(4)))
-                            )))
+                            2.into(),
+                            E::Op(O::Mul(3.into(), 4.into())).boxed()
                         )))
                     );
                 }
@@ -364,11 +335,8 @@ mod parser {
                     assert_eq!(
                         parser.parse("2 * 3 + 4"),
                         Ok(E::Op(O::Add(
-                            Box::new(E::Op(O::Mul(
-                                Box::new(E::Const(C::Integer(2))),
-                                Box::new(E::Const(C::Integer(3)))
-                            ))),
-                            Box::new(E::Const(C::Integer(4)))
+                            E::Op(O::Mul(2.into(), 3.into())).into(),
+                            4.into()
                         )))
                     );
                 }
