@@ -2,6 +2,7 @@ use crate::ast::{
     Constant as C,
     Expression as E,
     Operation as O,
+    Statement as S,
 };
 
 grammar;
@@ -146,6 +147,10 @@ Tier5: E = {
 
 // The weakest operation will be on the bottom of the stack.
 pub Expr: E = Tier5;
+
+pub Statement: S = {
+    r"(KI|ki):" <Expr> => S::Cout(<>),
+}
 
 pub Input: E = {
     Expr

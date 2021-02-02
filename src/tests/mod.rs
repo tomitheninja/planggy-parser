@@ -1,10 +1,11 @@
 use super::{
     ast,
-    planggy::{ConstParser, ExprParser},
+    planggy::{ConstParser, ExprParser, StatementParser},
 };
 
 mod constants;
 mod operations;
+mod statement;
 
 #[cfg(test)]
 mod expression {
