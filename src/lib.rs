@@ -27,6 +27,12 @@ mod parser {
             }
 
             #[test]
+            fn multi_digit() {
+                let parser = Parser::new();
+                assert_eq!(parser.parse("1234"), Ok(E::Const(C::Integer(1234))));
+            }
+
+            #[test]
             fn two() {
                 let parser = Parser::new();
                 assert_eq!(parser.parse("2"), Ok(E::Const(C::Integer(2))));

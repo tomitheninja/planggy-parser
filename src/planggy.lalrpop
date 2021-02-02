@@ -25,8 +25,8 @@ Const: C = {
     // the last character of the string
     // must not be a backslash
     r#""([^"]|([\\]["]))*([^\\]|\\\\)""# => C::String((<>)[1..<>.len()-1].to_string()),
-    r"[+-]?\d" => C::Integer(<>.parse().unwrap()),
-    r"[+-]?\d\.\d" => C::Float(<>.parse().unwrap()),
+    r"[+-]?\d+" => C::Integer(<>.parse().unwrap()),
+    r"[+-]?\d+\.\d+" => C::Float(<>.parse().unwrap()),
     r"IGAZ|igaz" => C::Boolean(true),
     r"HAMIS|hamis" => C::Boolean(false),
 };
