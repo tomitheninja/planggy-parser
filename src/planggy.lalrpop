@@ -32,12 +32,31 @@ Const: C = {
     r"HAMIS|hamis" => C::Boolean(false),
 };
 
-SimpleExpr: E = {
+/// An expression in atomic
+/// if it consists of only part
+AtomicExpr: E = {
     Const => E::Const(<>),
-    "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
+    WrappedExpr => <>,
 };
 
-pub Expr: E = { SimpleExpr };
+WrappedExpr: E = {
+    "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
+}
+
+/// An expression in unary
+/// if it consists of exactly two parts:
+/// an operation as prefix and an atomic expression
+UnaryExpr: E = {
+    // The recommended format is to leave a whitespace after the operation,
+    // but the whitespace can be left, if the expression is wrapped.
+    r"(NEM|nem)\s" <AtomicExpr> => E::Op(O::Not(Box::new(<>))),
+    r"(NEM|nem)" <WrappedExpr> => E::Op(O::Not(Box::new(<>))),
+}
+
+pub Expr: E = {
+    AtomicExpr,
+    UnaryExpr,
+};
 
 pub Input: E = {
     Expr

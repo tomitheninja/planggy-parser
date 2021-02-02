@@ -247,6 +247,43 @@ mod parser {
                     );
                 }
             }
+
+            #[cfg(test)]
+            mod unary {
+                use super::*;
+
+                #[test]
+                fn simple() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("NEM IGAZ"),
+                        Ok(E::Op(O::Not(Box::new(E::Const(C::Boolean(true))))))
+                    )
+                }
+
+                #[test]
+                fn missing_whitespace() {
+                    let parser = Parser::new();
+                    assert!(parser.parse("NEMIGAZ").is_err());
+                }
+
+                #[test]
+                fn double_whitespace() {
+                    let parser = Parser::new();
+                    assert!(parser.parse("NEM  IGAZ").is_ok());
+                }
+
+                #[test]
+                fn parentheses() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("NEM(IGAZ)"),
+                        Ok(E::Op(O::Not(Box::new(E::Op(O::Parentheses(Box::new(
+                            E::Const(C::Boolean(true))
+                        )))))))
+                    );
+                }
+            }
         }
     }
 }
