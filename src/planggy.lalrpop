@@ -1,6 +1,7 @@
 use crate::ast::{
     Constant as C,
     Expression as E,
+    Operation as O,
 };
 
 grammar;
@@ -33,7 +34,8 @@ Const: C = {
 
 SimpleExpr: E = {
     Const => E::Const(<>),
-}
+    "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
+};
 
 pub Expr: E = { SimpleExpr };
 

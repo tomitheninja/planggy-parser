@@ -14,7 +14,7 @@ mod parser {
     #[cfg(test)]
     mod expressions {
         use super::{planggy::ExprParser as Parser, *};
-        use ast::{Constant as C, Expression as E};
+        use ast::{Constant as C, Expression as E, Operation as O};
 
         #[cfg(test)]
         mod integer {
@@ -216,6 +216,36 @@ mod parser {
                 let parser = Parser::new();
                 assert!(parser.parse("\"fo\\\\\"").is_ok());
                 assert!(parser.parse("\"\\\\\"").is_ok());
+            }
+        }
+
+        #[cfg(test)]
+        mod operations {
+            use super::*;
+
+            #[cfg(test)]
+            mod parentheses {
+                use super::*;
+
+                #[test]
+                fn once() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("(123)"),
+                        Ok(E::Op(O::Parentheses(Box::new(E::Const(C::Integer(123))))))
+                    );
+                }
+
+                #[test]
+                fn twice() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("((456))"),
+                        Ok(E::Op(O::Parentheses(Box::new(E::Op(O::Parentheses(
+                            Box::new(E::Const(C::Integer(456)))
+                        ))))))
+                    );
+                }
             }
         }
     }

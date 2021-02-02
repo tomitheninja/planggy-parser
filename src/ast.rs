@@ -8,6 +8,12 @@ pub enum Constant {
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum Operation {
+    Parentheses(Box<Expression>),
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Expression {
     Const(Constant),
+    Op(Operation),
 }
