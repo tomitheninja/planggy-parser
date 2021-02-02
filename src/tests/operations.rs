@@ -26,6 +26,28 @@ mod operations {
                 )))
             );
         }
+
+        #[test]
+        fn const_item_at() {
+            let parser = Parser::new();
+            assert_eq!(
+                parser.parse("\"foo\"[0]"),
+                Ok(E::Op(O::ItemAt("foo".to_string().into(), 0.into())))
+            )
+        }
+
+        #[test]
+        fn const_slice() {
+            let parser = Parser::new();
+            assert_eq!(
+                parser.parse("\"foo\"[0:2]"),
+                Ok(E::Op(O::Slice(
+                    "foo".to_string().into(),
+                    0.into(),
+                    2.into()
+                )))
+            )
+        }
     }
 
     #[cfg(test)]

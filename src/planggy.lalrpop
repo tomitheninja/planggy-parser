@@ -43,6 +43,12 @@ AtomicExpr: E = {
 WrappedExpr: E = {
     "(" <Expr> ")" => E::Op(O::Parentheses(<>.into())),
     "|" <Expr> "|" => E::Op(O::Abs(<>.into())),
+    <x:Const> "[" <idx:Expr> "]" => E::Op(O::ItemAt(E::Const(x.into()).boxed(), idx.into())),
+    <x:Const> "[" <i1:Expr> ":" <i2:Expr> "]" => E::Op(O::Slice(
+        E::Const(x.into()).boxed(),
+        i1.into(),
+        i2.into()
+    )),
 };
 
 /// An expression in unary
