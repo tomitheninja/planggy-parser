@@ -12,6 +12,8 @@ pub enum Operation {
     Parentheses(Box<Expression>),
     Not(Box<Expression>),
     Neg(Box<Expression>),
+    Mul(Box<Expression>, Box<Expression>),
+    Add(Box<Expression>, Box<Expression>),
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

@@ -301,6 +301,65 @@ mod parser {
                     );
                 }
             }
+
+            #[cfg(test)]
+            mod tier1 {
+                use super::*;
+
+                #[test]
+                fn mul_const() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("2 * 3"),
+                        Ok(E::Op(O::Mul(
+                            Box::new(E::Const(C::Integer(2))),
+                            Box::new(E::Const(C::Integer(3)))
+                        )))
+                    );
+                }
+
+                #[test]
+                fn add_const() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("2 + 3"),
+                        Ok(E::Op(O::Add(
+                            Box::new(E::Const(C::Integer(2))),
+                            Box::new(E::Const(C::Integer(3)))
+                        )))
+                    );
+                }
+
+                #[test]
+                fn mul_vs_add_right() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("2 + 3 * 4"),
+                        Ok(E::Op(O::Add(
+                            Box::new(E::Const(C::Integer(2))),
+                            Box::new(E::Op(O::Mul(
+                                Box::new(E::Const(C::Integer(3))),
+                                Box::new(E::Const(C::Integer(4)))
+                            )))
+                        )))
+                    );
+                }
+
+                #[test]
+                fn mul_vs_add_left() {
+                    let parser = Parser::new();
+                    assert_eq!(
+                        parser.parse("2 * 3 + 4"),
+                        Ok(E::Op(O::Add(
+                            Box::new(E::Op(O::Mul(
+                                Box::new(E::Const(C::Integer(2))),
+                                Box::new(E::Const(C::Integer(3)))
+                            ))),
+                            Box::new(E::Const(C::Integer(4)))
+                        )))
+                    );
+                }
+            }
         }
     }
 }

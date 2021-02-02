@@ -41,24 +41,44 @@ AtomicExpr: E = {
 
 WrappedExpr: E = {
     "(" <Expr> ")" => E::Op(O::Parentheses(Box::new(<>))),
-}
-
-AtomicOrUnary: E = { AtomicExpr, UnaryExpr };
+};
 
 /// An expression in unary
 /// if it consists of exactly two parts:
 /// an operation as prefix and an atomic expression
+AtomicOrUnary: E = { AtomicExpr, UnaryExpr };
+
 UnaryExpr: E = {
     // The recommended format is to leave a whitespace after the operation,
     // but the whitespace can be left, if the expression is wrapped.
     r"(NEM|nem)\s" <AtomicOrUnary> => E::Op(O::Not(Box::new(<>))),
     r"(NEM|nem)" <WrappedExpr> => E::Op(O::Not(Box::new(<>))),
     "-" <AtomicOrUnary> => E::Op(O::Neg(Box::new(<>))),
+};
+
+// ######## BINARY OPERATIONS ########
+//
+// The order of execution is determinated by the operations
+// Some operations are "stronger" than others.
+
+// In the context of binnary operations,
+// unary operations are considered atomic.
+Tier0Expr = { AtomicOrUnary };
+
+Tier1Expr: E = {
+    <l:Tier0Expr> "*" <r:Tier0Expr> => E::Op(O::Mul(Box::new(l), Box::new(r)))
+};
+
+TierMax1Expr = { Tier0Expr, Tier1Expr };
+
+Tier2Expr: E = {
+       <l:TierMax1Expr> "+" <r:TierMax1Expr> => E::Op(O::Add(Box::new(l), Box::new(r))) 
 }
 
 pub Expr: E = {
-    AtomicExpr,
-    UnaryExpr,
+    Tier0Expr,
+    Tier1Expr,
+    Tier2Expr,
 };
 
 pub Input: E = {
