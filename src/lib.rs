@@ -253,7 +253,7 @@ mod parser {
                 use super::*;
 
                 #[test]
-                fn simple() {
+                fn normal_whitespace() {
                     let parser = Parser::new();
                     assert_eq!(
                         parser.parse("NEM IGAZ"),
