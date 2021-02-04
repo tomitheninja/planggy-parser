@@ -1,5 +1,5 @@
 use super::{DError, Deserialize, Expr, Pair, Printable, Rule, Serialize};
-use derive_more::{Display, From, TryInto};
+use derive_more::Display;
 
 #[derive(Debug, Clone, Copy, PartialEq, Display)]
 pub enum UnaryOpCode {

@@ -1,6 +1,5 @@
-use super::{Constant, DError, Deserialize, Expr, Pair, Printable, Rule, Serialize};
-use derive_more::{Display, From, TryInto};
-use pest::RuleType;
+use super::{DError, Deserialize, Expr, Pair, Printable, Rule, Serialize};
+use derive_more::{Display, From};
 
 // keep in execution order
 #[derive(Debug, PartialOrd, Clone, PartialEq, From, Display)]
@@ -97,7 +96,6 @@ impl BinaryExpr {
             };
             v.push(x);
         }
-        use BinaryOpCode as B;
         Ok(Self::create_ast(v, BinaryOpCode::tiers()))
     }
 

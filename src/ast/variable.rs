@@ -1,14 +1,8 @@
-use super::{Constant, DError, Deserialize, Pair, Printable, Rule, Serialize};
-use derive_more::{Display, From, TryInto};
+use super::{DError, Deserialize, Pair, Printable, Rule, Serialize};
+use derive_more::{Display, From};
 
 #[derive(Debug, Clone, PartialEq, From, Display)]
 pub struct VariableName(String);
-
-// #[derive(Debug, Clone, PartialEq, From)]
-// pub struct Variable {
-//     name: VariableName,
-//     value: Option<Constant>,
-// }
 
 impl Serialize for VariableName {
     fn serialize(&self) -> Printable {

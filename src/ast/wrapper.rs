@@ -1,5 +1,3 @@
-use std::fmt::Write;
-
 use super::{DError, Deserialize, Expr, Pair, Printable, Rule, Serialize};
 
 #[derive(Debug, Clone, PartialEq)]

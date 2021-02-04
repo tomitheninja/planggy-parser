@@ -2,7 +2,7 @@ use super::{
     binary, unary, BinaryExpr, Constant, DError, Deserialize, Pair, Printable, Rule, Serialize,
     UnaryExpr, VariableName, Wrapper,
 };
-use derive_more::{Display, From, TryInto};
+use derive_more::From;
 
 #[derive(Debug, Clone, PartialEq, From)]
 pub enum Expr {
@@ -118,9 +118,9 @@ macro_rules! parse {
 #[cfg(test)]
 mod tests {
 
-    use crate::ast::{unary::UnaryOpCode, UnaryExpr};
+    use crate::ast::unary::UnaryOpCode;
 
-    use super::super::{BinaryExpr, BinaryOpCode, Expr, VariableName};
+    use super::super::{BinaryOpCode, Expr, VariableName};
 
     #[test]
     fn parse_macro() {
