@@ -1,0 +1,113 @@
+WS = _{ (" " | "\t" | NEWLINE)+ }
+COMMENT = { "**" ~ (!NEWLINE ~ ANY)* }
+
+escape = _{ "\\" }
+
+boolean = ${ yes | no }
+  yes = @{ "IGAZ" | "igaz" }
+  no = @{ "HAMIS" | "hamis" }
+
+number = _{ float | int }
+  int = @{ ("+" | "-")? ~ ASCII_DIGIT+ }
+  float = @{ ("+" | "-")? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+character = @{ char_normal | char_special }
+  char_normal = _{ !("\\" | "'") ~ ANY }
+  char_special = _{ "\\" ~ (ASCII_ALPHANUMERIC | "'" | " ") }
+
+string = @{ (string_char_normal | string_char_special)* ~ !("\\") | "" }
+  string_char_normal = _{ !("\\" | "\"") ~ ANY }
+  string_char_special = _{ "\\" ~ ANY }
+  
+constant = _{ boolean | number | "'" ~ character ~ "'" | "\"" ~ string ~ "\"" }
+
+reservered = _{ unary_op | tier1_op | tier2_op | tier3_op | tier4_op | ^"BE" | ^"KI" }
+variable_name = { !(reservered) ~ variable_name_ok }
+variable_name_ok = _{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+value = _{ (constant | variable_name) }
+
+unary = { unary_op ~ ( WS ~ unary_or_atomic | wrapper ) }
+  unary_op = { not | sin | cos }
+    not = { "NEM" | "nem" }
+    sin = { "SIN" | "sin" }
+    cos = { "COS"  | "cos" }
+
+wrapper = _{ (parentheses | abs | index | slice) }
+  parentheses = { "(" ~ expr ~ ")" }
+  abs = { "|" ~ expr ~ "|" }
+  index = { value ~ "[" ~ expr ~ "]" }
+  slice = { value ~ "[" ~ expr ~ ":" ~ expr ~ "]" }
+
+atomic = _{ (wrapper | value) }
+unary_or_atomic = _{ unary | atomic }
+
+tier0 = _{ unary_or_atomic }
+
+tier1 = _{ tier0 ~ WS? ~ tier1_op ~ WS? ~ tier1 | tier0 } 
+  tier1_op = { pow | search }
+  pow = { "^" }
+  search = { "@" }
+
+tier2 = _{ tier1 ~ WS? ~ tier2_op ~ WS? ~ tier2 | tier1 } 
+  tier2_op = { mul | div | div_int | mod_op }
+  mul = { "*" }
+  div = { "/" }
+  div_int = { "DIV" | "div" }
+  mod_op = { "MOD" | "mod" }
+
+tier3 = _{ tier2 ~ WS? ~ tier3_op ~ WS? ~ tier3 | tier2+ } 
+  tier3_op = { add | sub }
+  add = { "+" }
+  sub = { "-" }
+
+tier4 = _{ tier3 ~ WS? ~ tier4_op ~ WS? ~ tier4 | tier3+ } 
+  tier4_op = { eq | ne | le | lt | ge | gt }
+  eq = { "=" }
+  ne = { "/=" }
+  le = { "<=" }
+  lt = { "<" }
+  ge = { ">=" }
+  gt = { ">" }
+
+tier5 = _{ tier4 ~ WS? ~ tier5_op ~ WS? ~ tier5 | tier4+ } 
+  tier5_op = { and | or }
+  and = { "ÉS" | "ES " | "és" | "es" }
+  or = { "VAGY" | "vagy" }
+
+expr = { tier5}
+
+statement = _{ print | read | assign }
+print = { ("KI" | "ki") ~ WS? ~ ":" ~ WS? ~ expr }
+read =  { ("BE" | "be") ~ WS? ~ ":" ~ WS? ~ variable_name }
+assign = { variable_name ~ WS? ~ ":=" ~ WS? ~ expr }
+
+vars_header = _{ "V"~("A"|"Á")~"LTOZ"~("O"|"Ó")~"K" | "v"~("a"|"á")~"ltoz"~("o"|"ó")~"k"}
+var_type = { t_int | t_float | t_string | t_boolean | t_character }
+  t_int = { "EG" ~ ("E" | "É") ~ "SZ" | "eg" ~ ("e" | "é") ~ "SZ" }
+  t_float = { "VAL" ~ ("O" | "Ó") ~ "S" | "val" ~ ("o" | "ó") ~ "s" }
+  t_string = { "SZ"~("O"|"Ö")~"VEG" | "sz"~("o"|"ö")~"veg" }
+  t_boolean = { "LOGIKAI" | "logikai" }
+  t_character = { "KARAKTER" | "karakter" }
+var_name_list = _{ (WS? ~ variable_name ~ WS? ~ ",")* ~ WS? ~ variable_name }
+
+var_same_type = { WS? ~ var_name_list ~ WS? ~ ":" ~ WS? ~ var_type }
+var_declarations = {
+	vars_header ~ WS? ~ ":" ~
+    	((var_same_type ~ WS? ~ ",")* ~ var_same_type)
+}
+
+statements = { (WS? ~ statement ~ NEWLINE)+ }
+
+program = {
+  program_header ~ WS? ~ program_name ~ WS? ~
+    (var_declarations ~ NEWLINE)? ~
+    statements+ ~
+  program_footer }
+
+	program_header = _{ "PROGRAM" | "program" }
+    program_name = { variable_name }
+    program_footer = _{
+    	"PROGRAM_V" ~ ("E" | "É") ~ "GE"
+      | "program_v" ~ ("e" | "é") ~ "ge" }
+bemenet = { SOI ~ program ~ EOI }

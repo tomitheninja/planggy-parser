@@ -1,0 +1,102 @@
+WS = _{ (" " | "\t" | NEWLINE)+ }
+COMMENT = { "**" ~ (!NEWLINE ~ ANY)* }
+
+// ######### CONSTANTS #########
+
+boolean = ${ boolean_true | boolean_false }
+  boolean_true = @{ "IGAZ" | "igaz" }
+  boolean_false = @{ "HAMIS" | "hamis" }
+
+number = ${ float | int }
+  int = @{ ("+" | "-")? ~ ASCII_DIGIT+ }
+  float = @{ ("+" | "-")? ~ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+ }
+
+character = @{ char_normal | char_special }
+  char_normal = _{ !("\\" | "'") ~ ANY }
+  char_special = _{ "\\" ~ (ASCII_ALPHANUMERIC | "'" | " ") }
+
+string = @{ (string_char_normal | string_char_special)* ~ !("\\") | "" }
+  string_char_normal = _{ !("\\" | "\"") ~ ANY }
+  string_char_special = _{ "\\" ~ (ASCII_ALPHA | "0" | "\"") }
+  
+constant = _{ boolean | number | "'" ~ character ~ "'" | "\"" ~ string ~ "\"" }
+
+reservered = _{ unary_op | binary_op | ^"BE" | ^"KI" | program_footer | program_header }
+variable_name = { !(reservered) ~ variable_name_ok }
+variable_name_ok = _{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+value = _{ (constant | variable_name) }
+
+unary = { (unary_op ~ ( WS ~ expr_helper | wrapper )) | (neg ~ expr_helper) | wrapper  }
+  unary_op = { not | sin | cos }
+    neg = { "-" }
+    not = { "NEM" | "nem" }
+    sin = { "SIN" | "sin" }
+    cos = { "COS"  | "cos" }
+
+wrapper = _{ (parentheses | abs | index | slice) }
+  parentheses = { "(" ~ expr ~ ")" }
+  abs = { "|" ~ expr ~ "|" }
+  index = { value ~ "[" ~ expr ~ "]" }
+  slice = { value ~ "[" ~ expr ~ ":" ~ expr ~ "]" }
+
+binary_op = { pow | search | mul | div | div_int | mod_op | add | sub | eq | ne | le | lt | ge | gt | and | or }
+  pow = { "^" }
+  search = { "@" }
+  mul = { "*" }
+  div = { "/" }
+  div_int = { "DIV" | "div" }
+  mod_op = { "MOD" | "mod" }
+  add = { "+" }
+  sub = { "-" }
+  eq = { "=" }
+  ne = { "/=" }
+  le = { "<=" }
+  lt = { "<" }
+  ge = { ">=" }
+  gt = { ">" }
+  and = { "AND" | "and" }
+  or = { "OR" | "or" }
+
+expr = { expr_helper ~ (WS? ~ binary_op ~ WS? ~ expr_helper)* }
+expr_helper = _{ wrapper | value | unary }
+
+statement = _{ print | read | assign }
+print = { ("OUT" | "oUT") ~ WS? ~ ":" ~ WS? ~ expr }
+read =  { ("IN" | "in") ~ WS? ~ ":" ~ WS? ~ variable_name }
+assign = { variable_name ~ WS? ~ ":=" ~ WS? ~ expr }
+
+vars_header = _{ "VARIABLES" | "variables"}
+var_type = { t_int | t_float | t_string | t_boolean | t_character }
+  t_int = { "INT" | "int" }
+  t_float = { "FLOAT" | "float" }
+  t_string = { "TEXT" | "text" }
+  t_boolean = { "BOOLEAN" | "boolean" }
+  t_character = { "CHARACTER" | "character" }
+var_name_list = _{ (WS? ~ variable_name ~ WS? ~ ",")* ~ WS? ~ variable_name }
+
+var_same_type = { WS? ~ var_name_list ~ WS? ~ ":" ~ WS? ~ var_type }
+var_declarations = {
+	vars_header ~ WS? ~ ":" ~
+    	((var_same_type ~ WS? ~ ",")* ~ var_same_type)
+}
+
+statements = { (WS? ~ statement ~ NEWLINE)+ }
+
+program = {
+  // PROGRAM name
+  program_header ~ WS? ~ program_name ~ WS? ~
+  // a, b: INT,
+  //    c: FLOAT
+    (var_declarations ~ NEWLINE)? ~
+    // a := 2 * b
+    // c := a / b
+    // OUT: c
+    statements+ ~
+  // PROGRAM_END
+  program_footer }
+
+	program_header = _{ "PROGRAM" | "program" }
+    program_name = { variable_name }
+    program_footer = _{ "PROGRAM_END" | "program_end" }
+bemenet = { SOI ~ program ~ EOI }

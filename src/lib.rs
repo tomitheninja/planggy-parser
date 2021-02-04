@@ -1,9 +1,15 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+
 #[macro_use]
-extern crate lalrpop_util;
+extern crate pest_derive;
+mod traits;
 
-pub mod ast;
+mod ast;
 
-lalrpop_mod!(pub planggy);
+#[allow(unused_imports)]
+use pest::Parser;
 
-#[cfg(test)]
-mod tests;
+#[derive(Parser)]
+#[grammar = "planggy.pest"]
+pub struct PlanggyParser;

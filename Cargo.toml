@@ -4,10 +4,10 @@ version = "0.1.0"
 authors = ["Südi Tamás <suditomi@pm.me>"]
 edition = "2018"
 
-[build-dependencies]
-lalrpop = "0.19.4"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+pest = "2.1"
+pest_derive = "2.1"
 derive_more = "0.99"
-lalrpop-util = "0.19.4"
-regex = "1"
+

@@ -1,6 +1,8 @@
-use super::Expression;
+use super::{Pair, Expr, VariableName};
 
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
+
 pub enum Statement {
-    Cout(Expression),
+    Print(Expr),
+    Read(VariableName),
+    Assign(VariableName, Expr)
 }

@@ -1,18 +1,35 @@
-use derive_more::{From, TryInto};
+// use super::{DError, Deserialize, Pair, Printable, Rule, Serialize};
+// use derive_more::{Display, From, TryInto};
 
-pub type Int = i32;
-pub type Float = f64;
+// use super::{Constant, VariableName};
 
-#[derive(Debug, Clone, PartialEq, PartialOrd, From, TryInto)]
-pub enum Value {
-    Integer(Int),
-    Float(Float),
-    Boolean(bool),
-    Character(char),
-    String(String),
-}
+// #[derive(Debug, PartialEq, From, TryInto, Display)]
+// pub enum Value {
+//     #[display(fmt = "{}", _0)]
+//     Const(Constant),
+//     #[display(fmt = "\"{}\"", _0)]
+//     VarName(VariableName),
+// }
 
-#[test]
-fn int_into_constexpr() {
-    assert_eq!(Value::Integer(2), 2.into());
-}
+// impl Serialize for Value {
+//     fn serialize(&self) -> Printable {
+//         vec![match self {
+//             Self::Const(c) => c.serialize(),
+//             Self::VarName(v) => v.serialize(),
+//         }]
+//         .into()
+//     }
+// }
+
+// impl Deserialize for Value {
+//     fn deserialize(pair: Pair) -> Result<Self, DError> {
+//         use Rule::as R;
+//         dbg!(pair.as_rule(), pair.as_str());
+//         match pair.as_rule() {
+//             R::constant => Constant::deserialize(pair),
+//             R::variable_name => VariableName::deserialize(pair),
+//             R::value => Self::deserialize(pair.into_inner().next().unwrap()),
+//             _ => Err(DError::UnknownRule),
+//         }
+//     }
+// }
