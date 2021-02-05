@@ -1,0 +1,65 @@
+use crate::{Variable as V, VarName as VName, VarType as VType};
+
+// example:
+// VARIABLES:
+//   a, b: Int,
+//   s: String
+
+// WHERE:
+//    [`a`, `b`, `s`]: VarName,
+//    [`Int`, `String`]: VarType,
+//    [`a, b`, `s`]: VarNameList,
+//    [`<VarNameList>: <VarType>`]: OneTypeDeclaration,
+//    [ `<OneType>, <OneType>` ]: VarDeclaration
+//    [ `VARIABLES <VarDeclaration>` ]: Variables
+//    [ ``, `<Variables>` ]: MaybeVariables
+
+
+grammar;
+
+pub VarName: VName = { r"[a-zA-Z_]\w*" => <>.into() }
+
+VarNameList: Vec<VName> = {
+    <v:(<VarName> ",")*> <last:VarName> => {
+        let mut v = v.clone();
+        v.push(last);
+        v
+    }
+};
+
+VarType: VType = {
+    T_INT => VType::Int,
+    T_FLOAT => VType::Float,
+    T_BOOLEAN => VType::Bool,
+    T_CHAR => VType::Char,
+    T_STRING => VType::String,
+}
+
+OneTypeDeclaration: Vec<V> = {
+    <v:VarNameList> ":" <t:VarType> => v.into_iter().map(|name| (name, t).into()).collect()
+}
+
+pub VarDeclaration: Vec<V> = {
+    <l:VarDeclaration> "," <r:OneTypeDeclaration> => {
+        l.into_iter().chain(r.into_iter()).collect()
+    },
+    OneTypeDeclaration,
+}
+pub Variables: Vec<V> = {
+    VARIABLE_HEADER ":" <VarDeclaration> => <>
+}
+
+pub MaybeVariables: Vec<V> = {
+    <Variables?> => <>.unwrap_or(vec![])
+}
+
+match {
+    r"EG[ÉE]SZ|Eg[ée]sz|eg[ée]sz|INT|Int|int" => T_INT,
+    r"VAL[ÓO]S|Val[óo]s|val[óo]s|FLOAT|Float|float" => T_FLOAT,
+    r"BOOL(EAN)?|Bool(ean)?|bool(ean)?|LOGIKAI|Logikai|logikai" => T_BOOLEAN,
+    r"CHAR(ACTER)?|Char(acter)?|char(acter)?|KARAKTER|Karakter|karakter" => T_CHAR,
+    r"STRING|String|string|SZ[ÖO]VEG|Sz[öo]veg|sz[öo]veg" => T_STRING,
+    r"VARIABLES|variables|V[ÁA]LTOZ[ÓO]K|v[áa]ltoz[óo]k" => VARIABLE_HEADER,
+} else {
+    _
+}
