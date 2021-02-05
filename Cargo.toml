@@ -1,5 +1,5 @@
 [package]
-name = "planggy-parser"
+name = "planggy-expr-parser"
 version = "0.1.0"
 authors = ["Südi Tamás <suditomi@pm.me>"]
 edition = "2018"

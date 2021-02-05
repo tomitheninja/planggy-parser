@@ -1,4 +1,4 @@
-use crate::ast::{Expr as E, VarName as VName, Unary as U, UnaryCode as UC, Binary as B, BinaryCode as BC, Stmt as S, Program as P, Value as V, ConstType as CT, VariableWithType as VWT};
+use crate::{Binary as B, BinaryCode as BC, Unary as U, UnaryCode as UC, Value as V, VarName as VName, Expr as E};
 
 grammar;
 
@@ -16,7 +16,7 @@ pub Value: V = {
 }
 
 // ######### atomic or wrapped #########
-Atomic: E = {
+pub Atomic: E = {
     "(" <Expr> ")" => U::from((UC::Parentheses, <>)).to_expr(),
     "|" <Expr> "|" => U::from((UC::Abs, <>)).to_expr(),
     <val:Atomic> "[" <at:Expr> "]" => E::Index(val.boxed(), at.boxed()),
@@ -24,8 +24,8 @@ Atomic: E = {
     Value => <>.to_expr(),
 }
 
-// // ######### unary #########
-UnaryOP: UC = {
+// // ######### Tier 0: unary #########
+pub UnaryOP: UC = {
     // Regexp isn't allowed, because all of these are valid variable names...
     "+" => UC::Plus,
     "-" => UC::Neg,
@@ -52,21 +52,21 @@ Tier0: E = {
     Atomic,
 }
 
-// ######### power and search #########
+// ######### Tier 1: power and search #########
 T1OP: BC = { "^" => BC::Pow, "@" => BC::Search }
 Tier1: E = {
     <l:Tier1> <o:T1OP> <r:Tier0> => B::from((o, l, r)).to_expr(),
     Tier0,
 };
 
-// ######### Multiplicative #########
+// ######### Tier 2: Multiplicative #########
 T2OP: BC = { "*" => BC::Mul, "/" => BC::Mul, "DIV" => BC::IntDiv, "MOD" => BC::Mod }
 Tier2: E = {
     <l:Tier2> <o:T2OP> <r:Tier1> => B::from((o, l, r)).to_expr(),
     Tier1,
 };
 
-// ######### Additive #########
+// ######### Tier 3: Additive #########
 Tier3: E = {
     // hard coded these ops, this way they get priority over unary + and -
     <Tier3> "+" <Tier2> => B::from((BC::Add, <>)).to_expr(),
@@ -74,7 +74,7 @@ Tier3: E = {
     Tier2,
 };
 
-// ######### Relational #########
+// ######### Tier 4: Relational #########
 T4OP: BC = {
     "=" => BC::Eq,
     "/=" => BC::Ne,
@@ -88,7 +88,7 @@ Tier4: E = {
     Tier3,
 };
 
-// ######### Logical #########
+// ######### Tier 5: Logical #########
 T5OP: BC = {
     BAnd => BC::And,
     BOr => BC::Or,
@@ -100,89 +100,32 @@ Tier5: E = {
 
 pub Expr: E = { Tier5 }
 
-// ######### Statement #########
-pub Stmt: S = {
-    STMT_PRINT ":" <Expr> => S::Print(<>),
-    STMT_READ  ":" <VarName> => S::Read(<>),
-    <v:VarName> ":=" <e:Expr> => S::Assign(v, e),
-}
-
-// ######### Variables #########
-VarNameList: Vec<VName> = {
-    <v:(<VarName> ",")*> <last:VarName> => {
-        let mut v = v.clone();
-        v.push(last);
-        v
-    }
-};
-
-TYPE_HELPER: CT = {
-    T_INT => CT::Int,
-    T_FLOAT => CT::Float,
-    T_BOOLEAN => CT::Bool,
-    T_CHAR => CT::Char,
-    T_STRING => CT::String,
-}
-VarDeclarationHelper: Vec<VWT> = {
-    <v:VarNameList> ":" <t:TYPE_HELPER> => v.into_iter().map(|name| (name, t).into()).collect()
-}
-
-pub VarDeclaration: Vec<VWT> = {
-    <l:VarDeclaration> "," <r:VarDeclarationHelper> => {
-        l.into_iter().chain(r.into_iter()).collect()
-    },
-    VarDeclarationHelper,
-}
-
-pub Variables: Vec<VWT> = {
-    VARIABLE_HEADER ":" <VarDeclaration> => <>
-}
-
-// ######### Program #########
-pub Program: P = {
-   PROGRAM_HEADER <n:VarName> <v:Variables?> <s:Stmt*> PROGRAM_FOOTER => (n, v.unwrap_or(vec![]), s).into()
-}
-
 // !!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 match {
-    // program block
-    r"PROGRAM|program" => PROGRAM_HEADER,
-    r"PROGRAM_V[ÉE]GE|program_v[ée]ge" => PROGRAM_FOOTER,
-    // variable declarations
-    r"EG[ÉE]SZ|Eg[ée]sz|eg[ée]sz|INT|Int|int" => T_INT,
-    r"VAL[ÓO]S|Val[óo]s|val[óo]s|FLOAT|Float|float" => T_FLOAT,
-    r"BOOLEAN|Boolean|boolean|LOGIKAI|Logikai|logikai" => T_BOOLEAN,
-    r"CHARACTER|Character|character|KARAKTER|Karakter|karakter" => T_CHAR,
-    r"STRING|String|string|SZ[ÖO]VEG|Sz[öo]veg|sz[öo]veg" => T_STRING,
-    r"VARIABLES|variables|V[ÁA]LTOZ[ÓO]K|v[áa]ltoz[óo]k" => VARIABLE_HEADER,
-    // statement
-    r"PRINT|print|KI|ki" => STMT_PRINT,
-    r"READ|read|BE|be" => STMT_READ,
-    // Unary operators
+    // unary operators
     r"RND|rnd"  => URnd,
     r"SIN|sin"  => USin,
     r"COS|cos"  => UCos,
     r"TAN|tan"  => UTan,
     r"EXP|exp"  => UExp,
     r"LOG|log"  => ULog,
+    r"NEM|nem|NOT|not" => UNot,
     r"ARCSIN|arcsin" => UArcsin,
     r"ARCCOS|arccos" => UArccos,
     r"ARCTAN|arctan" => UArctan,
-    r"NEM|nem|NOT|not" => UNot,
     r"UPPER|upper|NAGY|nagy" => UToUpper,
-    r"IS_CHAR|is_char|BETU|betu" => UIsWordChar,
     r"ROUND|round|KEREK|kerek" => URound,
     r"LOWER|lower|KICSI|kicsi" => UToLower,
+    r"FLOOR|floor|EG[ÉE]SZ|eg[ée]sz" => UFloor,
+    r"IS_CHAR|is_char|BETU|betu" => UIsWordChar,
+    r"FLOAT|float|VAL[ÓO]S|val[óo]s"  => UToFloat,
     r"IS_DIGIT|is_digit|SZ[AÁ]M|sz[aá]m" => UIsDigit,
     // binary operators
     r"OR|or|VAGY|vagy" => BOr,
     r"AND|and|[ÉE]S|[ée]s" => BAnd,
     r"IGAZ|igaz|TRUE|True|true" => TRUE,
     r"HAMIS|hamis|FALSE|False|false" => FALSE,
-} else {
-    r"FLOAT|float|VAL[ÓO]S|val[óo]s"  => UToFloat,
-    r"FLOOR|floor|EG[ÉE]SZ|eg[ée]sz" => UFloor,
 } else {
     _
 }

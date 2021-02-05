@@ -31,9 +31,9 @@ macro_rules! test {
     ($test_name:ident: $in:tt -> $res:expr) => {
         #[test]
         fn $test_name() {
-            let parser = crate::planggy::ExprParser::new();
+            let parser = crate::Parser::new();
             let result = parser.parse($in).unwrap();
-            let expected: crate::ast::Value = $res;
+            let expected: crate::Value = $res;
             let expected = expected.to_expr();
             assert_eq!(result, expected)
         }

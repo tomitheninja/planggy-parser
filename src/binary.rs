@@ -45,13 +45,9 @@ macro_rules! test {
     ($test_name:ident: $in:tt -> $lhs:expr ; $code:tt ; $rhs:expr) => {
         #[test]
         fn $test_name() {
-            let parser = crate::planggy::ExprParser::new();
+            let parser = crate::Parser::new();
             let result = parser.parse($in).unwrap();
-            let expected = Binary::from((
-                crate::ast::BinaryCode::$code,
-                Box::new($lhs),
-                Box::new($rhs),
-            ));
+            let expected = Binary::from((crate::BinaryCode::$code, Box::new($lhs), Box::new($rhs)));
             assert_eq!(result, expected.to_expr())
         }
     };

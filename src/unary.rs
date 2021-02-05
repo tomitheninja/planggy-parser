@@ -50,9 +50,9 @@ macro_rules! test {
     ($test_name:ident: $in:tt -> $code:tt + $expr:expr) => {
         #[test]
         fn $test_name() {
-            let parser = crate::planggy::ExprParser::new();
+            let parser = crate::Parser::new();
             let result = parser.parse($in).unwrap();
-            let expected = Unary::from((crate::ast::UnaryCode::$code, Box::new($expr)));
+            let expected = Unary::from((crate::UnaryCode::$code, Box::new($expr)));
             assert_eq!(result, expected.to_expr())
         }
     };
