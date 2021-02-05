@@ -45,7 +45,7 @@ pub UnaryOP: UC = {
     UToLower => UC::ToLower,
     UIsDigit => UC::IsDigit,
     UToFloat => UC::ToFloat,
-    UFloor => UC::Floor,
+    UInt => UC::ToInt,
 }
 Tier0: E = {
     UnaryOP Tier0 => U::from((<>)).to_expr(),
@@ -117,7 +117,7 @@ match {
     r"UPPER|upper|NAGY|nagy" => UToUpper,
     r"ROUND|round|KEREK|kerek" => URound,
     r"LOWER|lower|KICSI|kicsi" => UToLower,
-    r"FLOOR|floor|EG[ÉE]SZ|eg[ée]sz" => UFloor,
+    r"INT|int|EG[ÉE]SZ|eg[ée]sz" => UInt,
     r"IS_CHAR|is_char|BETU|betu" => UIsWordChar,
     r"FLOAT|float|VAL[ÓO]S|val[óo]s"  => UToFloat,
     r"IS_DIGIT|is_digit|SZ[AÁ]M|sz[aá]m" => UIsDigit,

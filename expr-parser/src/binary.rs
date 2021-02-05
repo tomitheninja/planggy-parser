@@ -1,23 +1,39 @@
 use super::Expr;
-use derive_more::{Constructor, From, Into};
+use derive_more::{Constructor, Display, From, Into};
 
-#[derive(Debug, PartialEq, Copy, Clone, Hash)]
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Display)]
 pub enum BinaryCode {
+    #[display(fmt = "^")]
     Pow,
+    #[display(fmt = "@")]
     Search,
+    #[display(fmt = "+")]
     Add,
+    #[display(fmt = "-")]
     Sub,
+    #[display(fmt = "*")]
     Mul,
+    #[display(fmt = "MOD")]
     Mod,
+    #[display(fmt = "/")]
     Div,
+    #[display(fmt = "DIV")]
     IntDiv,
+    #[display(fmt = "=")]
     Eq,
+    #[display(fmt = "/=")]
     Ne,
+    #[display(fmt = ">")]
     Gt,
+    #[display(fmt = ">=")]
     Ge,
+    #[display(fmt = "<")]
     Lt,
+    #[display(fmt = "<=")]
     Le,
+    #[display(fmt = "AND")]
     And,
+    #[display(fmt = "OR")]
     Or,
 }
 
@@ -27,6 +43,14 @@ pub struct Binary(BinaryCode, Box<Expr>, Box<Expr>);
 impl Binary {
     pub fn op_code(&self) -> &BinaryCode {
         &self.0
+    }
+
+    pub fn lhs(&self) -> &Expr {
+        &self.1
+    }
+
+    pub fn rhs(&self) -> &Expr {
+        &self.2
     }
 
     pub fn to_expr(self) -> Expr {

@@ -14,6 +14,30 @@ impl Expr {
     pub fn boxed(self) -> Box<Self> {
         self.into()
     }
+
+    pub fn unwrap_value(self) -> Value {
+        if let Self::Value(x) = self {
+            x
+        } else {
+            panic!("Expr is not a value expr")
+        }
+    }
+
+    pub fn unwrap_unary(self) -> Unary {
+        if let Self::Unary(x) = self {
+            x
+        } else {
+            panic!("Expr is not a unary expr")
+        }
+    }
+
+    pub fn unwrap_binary(self) -> Binary {
+        if let Self::Binary(x) = self {
+            x
+        } else {
+            panic!("Expr is not a binaBinary expr")
+        }
+    }
 }
 
 macro_rules! from_const {

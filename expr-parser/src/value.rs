@@ -18,6 +18,46 @@ impl Value {
     pub fn to_expr(self) -> Expr {
         self.into()
     }
+
+    pub fn unwrap_boolean(self) -> bool {
+        if let Self::Boolean(x) = self {
+            x
+        } else {
+            panic!("Value is not a bool")
+        }
+    }
+
+    pub fn unwrap_int(self) -> Int {
+        if let Self::Int(x) = self {
+            x
+        } else {
+            panic!("Value is not an Int")
+        }
+    }
+
+    pub fn unwrap_float(self) -> Float {
+        if let Self::Float(x) = self {
+            x
+        } else {
+            panic!("Value is not a Float")
+        }
+    }
+
+    pub fn unwrap_char(self) -> char {
+        if let Self::Char(x) = self {
+            x
+        } else {
+            panic!("Value is not a char")
+        }
+    }
+
+    pub fn unwrap_string(self) -> String {
+        if let Self::String(x) = self {
+            x
+        } else {
+            panic!("Value is not a String")
+        }
+    }
 }
 
 impl From<&str> for Value {

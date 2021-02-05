@@ -1,29 +1,48 @@
 use super::Expr;
-use derive_more::{Constructor, From, Into};
+use derive_more::{Constructor, Display, From, Into};
 
-#[derive(Debug, PartialEq, Copy, Clone, Hash)]
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Display)]
 pub enum UnaryCode {
-    Plus,
-    Neg,
     Abs,
     Parentheses,
+    #[display(fmt = "+")]
+    Plus,
+    #[display(fmt = "-")]
+    Neg,
+    #[display(fmt = "RND")]
     Random,
+    #[display(fmt = "SIN")]
     Sin,
+    #[display(fmt = "COS")]
     Cos,
+    #[display(fmt = "TAN")]
     Tan,
+    #[display(fmt = "EXP")]
     Exp,
+    #[display(fmt = "LOG")]
     Log,
+    #[display(fmt = "ARCSIN")]
     Arcsin,
+    #[display(fmt = "ARCCOS")]
     Arccos,
+    #[display(fmt = "ARCTAN")]
     Arctan,
+    #[display(fmt = "NOT")]
     Not,
+    #[display(fmt = "UPPER")]
     ToUpper,
+    #[display(fmt = "CHAR")]
     IsWordChar,
+    #[display(fmt = "ROUND")]
     Round,
+    #[display(fmt = "LOWER")]
     ToLower,
+    #[display(fmt = "DIGIT")]
     IsDigit,
+    #[display(fmt = "FLOAT")]
     ToFloat,
-    Floor,
+    #[display(fmt = "INT")]
+    ToInt,
 }
 
 #[derive(Debug, PartialEq, From, Clone, Into, Constructor)]
@@ -32,6 +51,10 @@ pub struct Unary(UnaryCode, Box<Expr>);
 impl Unary {
     pub fn op_code(&self) -> &UnaryCode {
         &self.0
+    }
+
+    pub fn rhs(&self) -> &Expr {
+        &self.1
     }
 
     pub fn to_expr(self) -> Expr {
