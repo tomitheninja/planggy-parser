@@ -2,4 +2,5 @@
 members = [
     "expr-parser",
     "vars-parser",
+    "stmt-parser",
 ]
