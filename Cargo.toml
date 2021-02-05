@@ -1,13 +1,4 @@
-[package]
-name = "planggy-expr-parser"
-version = "0.1.0"
-authors = ["Südi Tamás <suditomi@pm.me>"]
-edition = "2018"
-
-[build-dependencies]
-lalrpop = "0.19.4"
-
-[dependencies]
-derive_more = "0.99"
-lalrpop-util = "0.19.4"
-regex = "1"
+[workspace]
+members = [
+    "expr-parser",
+]

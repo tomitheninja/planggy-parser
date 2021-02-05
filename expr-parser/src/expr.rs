@@ -1,23 +1,5 @@
-#[macro_use]
-extern crate lalrpop_util;
-
+use super::{Binary, BinaryCode, TFloat, TInt, Unary, UnaryCode, Value, VarName};
 use derive_more::From;
-
-mod binary;
-mod constant;
-mod unary;
-mod value;
-mod variable;
-
-lalrpop_mod!(pub expr);
-
-pub use expr::ExprParser as Parser;
-
-pub use binary::{Binary, BinaryCode};
-pub use constant::ConstType;
-pub use unary::{Unary, UnaryCode};
-pub use value::{Float as TFloat, Int as TInt, Value};
-pub use variable::VarName;
 
 #[derive(Debug, PartialEq, Clone, From)]
 pub enum Expr {
