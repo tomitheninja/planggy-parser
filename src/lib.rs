@@ -5,5 +5,4 @@ pub mod ast;
 
 lalrpop_mod!(pub planggy);
 
-#[cfg(test)]
-mod tests;
+pub use planggy::{ExprParser, ProgramParser, StmtParser, ValueParser};

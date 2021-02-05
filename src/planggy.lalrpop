@@ -1,157 +1,188 @@
-use crate::ast::{
-    Constant as C,
-    Expression as E,
-    Operation as O,
-    Statement as S,
-};
+use crate::ast::{Expr as E, VarName as VName, Unary as U, UnaryCode as UC, Binary as B, BinaryCode as BC, Stmt as S, Program as P, Value as V, ConstType as CT, VariableWithType as VWT};
 
 grammar;
 
-pub Const: C = {
-    r"'[^'\\]'" => C::Character(<>.chars().nth(1).unwrap()),
-    r"'\\['\\rnt0]'" => C::Character({
-        match <>.chars().nth(2) {
-            Some('\'') => '\'',
-            Some('\\') => '\\',
-            Some('r')  => '\r',
-            Some('n')  => '\n',
-            Some('t')  => '\t',
-            Some('0')  => '\0',
-            _ => unimplemented!("Unknown escaped character!"),
-        }
-    }),
-    r#""""# => C::String("".to_string()),
-    // wrapped in double-quotes
-    // any char except double-quotes,
-    // or escaped double-quote, repeating.
-    // the last character of the string
-    // must not be a backslash
-    r#""([^"]|([\\]["]))*([^\\]|\\\\)""# => C::String((<>)[1..<>.len()-1].to_string()),
-    r"[+-]?\d+" => C::Integer(<>.parse().unwrap()),
-    r"[+-]?\d+\.\d+" => C::Float(<>.parse().unwrap()),
-    r"IGAZ|igaz" => C::Boolean(true),
-    r"HAMIS|hamis" => C::Boolean(false),
-};
+// ######### constant / variable #########
+pub VarName: VName = { r"[a-zA-Z_]\w*" => <>.into() }
+pub Value: V = {
+    TRUE => true.into(),
+    FALSE => false.into(),
+    r"\d+" => V::Int(<>.parse().unwrap()),
+    r"\d+\.\d+" => V::Float(<>.parse().unwrap()),
+    r"\d+(\.\d+)?f" => V::Float(<>[..<>.len()-1].parse().unwrap()),
+    r"'(\\[.]|[^\\'])'" => <>[1..<>.len()-1].chars().nth(0).unwrap().into(),
+    r#""(([^"]|\\")*[^\\"])?""# => <>[1..<>.len()-1].into(),
+    <VarName> => <>.into(),
+}
 
-/// An expression in atomic
-/// if it consists of only one part
-AtomicExpr: E = {
-    Const => E::Const(<>),
-    WrappedExpr => <>,
-};
+// ######### atomic or wrapped #########
+Atomic: E = {
+    "(" <Expr> ")" => U::from((UC::Parentheses, <>)).to_expr(),
+    "|" <Expr> "|" => U::from((UC::Abs, <>)).to_expr(),
+    <val:Atomic> "[" <at:Expr> "]" => E::Index(val.boxed(), at.boxed()),
+    <val:Atomic> "[" <start:Expr> ":" <end:Expr> "]" => E::Slice(val.boxed(), start.boxed(), end.boxed()),
+    Value => <>.to_expr(),
+}
 
-// A wrapper converts any expression into an atom
-WrappedExpr: E = {
-    "(" <Expr> ")" => E::Op(O::Parentheses(<>.into())),
-    "|" <Expr> "|" => E::Op(O::Abs(<>.into())),
-    <x:Const> "[" <idx:Expr> "]" => E::Op(O::ItemAt(E::Const(x.into()).boxed(), idx.into())),
-    <x:Const> "[" <i1:Expr> ":" <i2:Expr> "]" => E::Op(O::Slice(
-        E::Const(x.into()).boxed(),
-        i1.into(),
-        i2.into()
-    )),
-};
+// // ######### unary #########
+UnaryOP: UC = {
+    // Regexp isn't allowed, because all of these are valid variable names...
+    "+" => UC::Plus,
+    "-" => UC::Neg,
+    URnd => UC::Random,
+    USin => UC::Sin,
+    UCos => UC::Cos,
+    UTan => UC::Tan,
+    UExp => UC::Exp,
+    ULog => UC::Log,
+    UArcsin => UC::Arcsin,
+    UArccos => UC::Arccos,
+    UArctan => UC::Arctan,
+    UNot => UC::Not,
+    UToUpper => UC::ToUpper,
+    UIsWordChar => UC::IsWordChar,
+    URound => UC::Round,
+    UToLower => UC::ToLower,
+    UIsDigit => UC::IsDigit,
+    UToFloat => UC::ToFloat,
+    UFloor => UC::Floor,
+}
+Tier0: E = {
+    UnaryOP Tier0 => U::from((<>)).to_expr(),
+    Atomic,
+}
 
-/// An expression in unary
-/// if it consists of exactly two parts:
-/// an operation as prefix and an atomic expression
-AtomicOrUnary: E = { AtomicExpr, UnaryExpr };
-
-UnaryExpr: E = { UnaryOp => E::Op(<>) };
-UnaryOp: O = {
-    // The recommended format is to leave a whitespace after the operation,
-    // but the whitespace can be left, if the expression is wrapped.
-    r"(NEM|nem)\s"          <AtomicOrUnary> => O::Not(<>.into()),
-    r"(NEM|nem)"            <WrappedExpr>   => O::Not(<>.into()),
-    "-"                     <AtomicOrUnary> => O::Neg(<>.into()),
-    r"(RND|rnd)\s"          <AtomicOrUnary> => O::Rnd(<>.into()),
-    r"(RND|rnd)"            <WrappedExpr>   => O::Rnd(<>.into()),
-    r"(SIN|sin)\s"          <AtomicOrUnary> => O::Sin(<>.into()),
-    r"(SIN|sin)"            <WrappedExpr>   => O::Sin(<>.into()),
-    r"(COS|cos)\s"          <AtomicOrUnary> => O::Cos(<>.into()),
-    r"(COS|cos)"            <WrappedExpr>   => O::Cos(<>.into()),
-    r"(TAN|tan)\s"          <AtomicOrUnary> => O::Tan(<>.into()),
-    r"(TAN|tan)"            <WrappedExpr>   => O::Tan(<>.into()),
-    r"(ARCSIN|arcsin)\s"    <AtomicOrUnary> => O::Arcsin(<>.into()),
-    r"(ARCSIN|arcsin)"      <WrappedExpr>   => O::Arcsin(<>.into()),
-    r"(ARCCOS|arccos)\s"    <AtomicOrUnary> => O::Arccos(<>.into()),
-    r"(ARCCOS|arccos)"      <WrappedExpr>   => O::Arccos(<>.into()),
-    r"(LOG|log)\s"          <AtomicOrUnary> => O::Log(<>.into()),
-    r"(LOG|log)"            <WrappedExpr>   => O::Log(<>.into()),
-    r"(EXP|exp)\s"          <AtomicOrUnary> => O::Exp(<>.into()),
-    r"(EXP|exp)"            <WrappedExpr>   => O::Exp(<>.into()),
-    r"(VAL[OÓ]S|val[oó]s)\s"<AtomicOrUnary> => O::ToFloat(<>.into()),
-    r"(VAL[OÓ]S|val[oó]s)"  <WrappedExpr>   => O::ToFloat(<>.into()),
-    r"(EGESZ|egesz)\s"      <AtomicOrUnary> => O::Floor(<>.into()),
-    r"(EGESZ|egesz)"        <WrappedExpr>   => O::Floor(<>.into()),
-    r"(KEREK|kerek)\s"      <AtomicOrUnary> => O::Round(<>.into()),
-    r"(KEREK|kerek)"        <WrappedExpr>   => O::Round(<>.into()),
-    r"(NAGY|nagy)\s"        <AtomicOrUnary> => O::ToUpper(<>.into()),
-    r"(NAGY|nagy)"          <WrappedExpr>   => O::ToUpper(<>.into()),
-    r"(KIS|kis)\s"          <AtomicOrUnary> => O::ToLower(<>.into()),
-    r"(KIS|kis)"            <WrappedExpr>   => O::ToLower(<>.into()),
-    r"(BETU|betu)\s"        <AtomicOrUnary> => O::IsWordChar(<>.into()),
-    r"(BETU|betu)"          <WrappedExpr>   => O::IsWordChar(<>.into()),
-    r"(SZAM|szam)\s"        <AtomicOrUnary> => O::IsDigit(<>.into()),
-    r"(SZAM|szam)"          <WrappedExpr>   => O::IsDigit(<>.into()),
-};
-
-// ######## BINARY OPERATIONS ########
-//
-// The order of execution is determinated by the operations
-// Some operations are "stronger" than others.
-// The parser will go from the lowest tier to the highest tier.
-// An will _fall back_ to the strongest tier.
-
-// In the context of binary operations,
-// unary operations can be considered atomic.
-Tier0 = { AtomicOrUnary };
-
+// ######### power and search #########
+T1OP: BC = { "^" => BC::Pow, "@" => BC::Search }
 Tier1: E = {
-    <l:Tier1> "^" <r:Tier0> => E::Op(O::Pow   (l.boxed(), r.boxed())),
-    <l:Tier1> "@" <r:Tier0> => E::Op(O::Search(l.boxed(), r.boxed())),
+    <l:Tier1> <o:T1OP> <r:Tier0> => B::from((o, l, r)).to_expr(),
     Tier0,
 };
 
+// ######### Multiplicative #########
+T2OP: BC = { "*" => BC::Mul, "/" => BC::Mul, "DIV" => BC::IntDiv, "MOD" => BC::Mod }
 Tier2: E = {
-    <l:Tier2> "*" <r:Tier1>         => E::Op(O::Mul   (l.boxed(), r.boxed())),
-    <l:Tier2> "/" <r:Tier1>         => E::Op(O::Div   (l.boxed(), r.boxed())),
-    <l:Tier2> r"DIV|div" <r:Tier1>  => E::Op(O::DivInt(l.boxed(), r.boxed())),
-    <l:Tier2> r"MOD|mod" <r:Tier1>  => E::Op(O::Mod   (l.boxed(), r.boxed())),
+    <l:Tier2> <o:T2OP> <r:Tier1> => B::from((o, l, r)).to_expr(),
     Tier1,
 };
 
+// ######### Additive #########
 Tier3: E = {
-    <l:Tier3> "+" <r:Tier2> => E::Op(O::Add(l.boxed(), r.boxed())),
-    <l:Tier3> "-" <r:Tier2> => E::Op(O::Sub(l.boxed(), r.boxed())),
+    // hard coded these ops, this way they get priority over unary + and -
+    <Tier3> "+" <Tier2> => B::from((BC::Add, <>)).to_expr(),
+    <Tier3> "-" <Tier2> => B::from((BC::Sub, <>)).to_expr(),
     Tier2,
 };
 
-
+// ######### Relational #########
+T4OP: BC = {
+    "=" => BC::Eq,
+    "/=" => BC::Ne,
+    "<" => BC::Lt,
+    "<=" => BC::Le,
+    ">" => BC::Gt,
+    ">=" => BC::Ge,
+}
 Tier4: E = {
-    // FIXME space around =
-    <l:Tier4> " =" <r:Tier3> => E::Op(O::Eq(l.boxed(), r.boxed())),
-    <l:Tier4> "/=" <r:Tier3> => E::Op(O::Ne(l.boxed(), r.boxed())),
-    <l:Tier4> "< " <r:Tier3> => E::Op(O::Lt(l.boxed(), r.boxed())),
-    <l:Tier4> "<=" <r:Tier3> => E::Op(O::Le(l.boxed(), r.boxed())),
-    <l:Tier4> "> " <r:Tier3> => E::Op(O::Gt(l.boxed(), r.boxed())),
-    <l:Tier4> ">=" <r:Tier3> => E::Op(O::Ge(l.boxed(), r.boxed())),
+    <l:Tier4> <o:T4OP> <r:Tier3> => B::from((o, l, r)).to_expr(),
     Tier3,
 };
 
+// ######### Logical #########
+T5OP: BC = {
+    BAnd => BC::And,
+    BOr => BC::Or,
+}
 Tier5: E = {
-    <l:Tier5> r"[EÉ]S|[eé]s" <r:Tier4> => E::Op(O::And(l.boxed(), r.boxed())),
-    <l:Tier5> r"VAGY|vagy"   <r:Tier4> => E::Op(O::Or(l.boxed(), r.boxed())),
+    <l:Tier5> <o:T5OP> <r:Tier4> => B::from((o, l, r)).to_expr(),
     Tier4,
 };
 
-// The weakest operation will be on the bottom of the stack.
-pub Expr: E = Tier5;
+pub Expr: E = { Tier5 }
 
-pub Statement: S = {
-    r"(KI|ki):" <Expr> => S::Cout(<>),
+// ######### Statement #########
+pub Stmt: S = {
+    STMT_PRINT ":" <Expr> => S::Print(<>),
+    STMT_READ  ":" <VarName> => S::Read(<>),
+    <v:VarName> ":=" <e:Expr> => S::Assign(v, e),
 }
 
-pub Input: E = {
-    Expr
+// ######### Variables #########
+VarNameList: Vec<VName> = {
+    <v:(<VarName> ",")*> <last:VarName> => {
+        let mut v = v.clone();
+        v.push(last);
+        v
+    }
 };
+
+TYPE_HELPER: CT = {
+    T_INT => CT::Int,
+    T_FLOAT => CT::Float,
+    T_BOOLEAN => CT::Bool,
+    T_CHAR => CT::Char,
+    T_STRING => CT::String,
+}
+VarDeclarationHelper: Vec<VWT> = {
+    <v:VarNameList> ":" <t:TYPE_HELPER> => v.into_iter().map(|name| (name, t).into()).collect()
+}
+
+pub VarDeclaration: Vec<VWT> = {
+    <l:VarDeclaration> "," <r:VarDeclarationHelper> => {
+        l.into_iter().chain(r.into_iter()).collect()
+    },
+    VarDeclarationHelper,
+}
+
+pub Variables: Vec<VWT> = {
+    VARIABLE_HEADER ":" <VarDeclaration> => <>
+}
+
+// ######### Program #########
+pub Program: P = {
+   PROGRAM_HEADER <n:VarName> <v:Variables?> <s:Stmt*> PROGRAM_FOOTER => (n, v.unwrap_or(vec![]), s).into()
+}
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+match {
+    // program block
+    r"PROGRAM|program" => PROGRAM_HEADER,
+    r"PROGRAM_V[ÉE]GE|program_v[ée]ge" => PROGRAM_FOOTER,
+    // variable declarations
+    r"EG[ÉE]SZ|Eg[ée]sz|eg[ée]sz|INT|Int|int" => T_INT,
+    r"VAL[ÓO]S|Val[óo]s|val[óo]s|FLOAT|Float|float" => T_FLOAT,
+    r"BOOLEAN|Boolean|boolean|LOGIKAI|Logikai|logikai" => T_BOOLEAN,
+    r"CHARACTER|Character|character|KARAKTER|Karakter|karakter" => T_CHAR,
+    r"STRING|String|string|SZ[ÖO]VEG|Sz[öo]veg|sz[öo]veg" => T_STRING,
+    r"VARIABLES|variables|V[ÁA]LTOZ[ÓO]K|v[áa]ltoz[óo]k" => VARIABLE_HEADER,
+    // statement
+    r"PRINT|print|KI|ki" => STMT_PRINT,
+    r"READ|read|BE|be" => STMT_READ,
+    // Unary operators
+    r"RND|rnd"  => URnd,
+    r"SIN|sin"  => USin,
+    r"COS|cos"  => UCos,
+    r"TAN|tan"  => UTan,
+    r"EXP|exp"  => UExp,
+    r"LOG|log"  => ULog,
+    r"ARCSIN|arcsin" => UArcsin,
+    r"ARCCOS|arccos" => UArccos,
+    r"ARCTAN|arctan" => UArctan,
+    r"NEM|nem|NOT|not" => UNot,
+    r"UPPER|upper|NAGY|nagy" => UToUpper,
+    r"IS_CHAR|is_char|BETU|betu" => UIsWordChar,
+    r"ROUND|round|KEREK|kerek" => URound,
+    r"LOWER|lower|KICSI|kicsi" => UToLower,
+    r"IS_DIGIT|is_digit|SZ[AÁ]M|sz[aá]m" => UIsDigit,
+    // binary operators
+    r"OR|or|VAGY|vagy" => BOr,
+    r"AND|and|[ÉE]S|[ée]s" => BAnd,
+    r"IGAZ|igaz|TRUE|True|true" => TRUE,
+    r"HAMIS|hamis|FALSE|False|false" => FALSE,
+} else {
+    r"FLOAT|float|VAL[ÓO]S|val[óo]s"  => UToFloat,
+    r"FLOOR|floor|EG[ÉE]SZ|eg[ée]sz" => UFloor,
+} else {
+    _
+}
